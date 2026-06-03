@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SASE + ZTNA Field Notes | Ibrahim Sultan</title>
+  <meta name="description" content="Practical rollout pattern for SASE and ZTNA programs" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#02060d; --cyan:#37d4ff; --text:#dff4ff; --gold:#ffb648; }
+    body {
+      margin: 0;
+      padding: 18px;
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 80% -5%, rgba(55, 212, 255, 0.15), transparent 45%),
+        var(--bg);
+      line-height: 1.75;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; }
+    a { color: var(--cyan); }
+    .btn {
+      display: inline-block;
+      margin-bottom: 14px;
+      border: 1px solid rgba(55, 212, 255, 0.5);
+      color: #d9f4ff;
+      text-decoration: none;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      letter-spacing: 0.08em;
+      margin: 4px 0 10px;
+      font-size: clamp(1.2rem, 4vw, 2rem);
+    }
+    h2 {
+      font-family: "Orbitron", sans-serif;
+      color: #d5f4ff;
+      margin-top: 20px;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+    }
+    .meta {
+      color: var(--gold);
+      font-size: 0.8rem;
+      margin-bottom: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    pre {
+      background: rgba(3, 11, 18, 0.85);
+      border: 1px solid rgba(55, 212, 255, 0.35);
+      padding: 10px;
+      overflow-x: auto;
+      color: #baf2ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="btn" href="../">Back to Blog</a>
+    <h1>SASE + ZTNA Field Notes</h1>
+    <div class="meta">Published June 3, 2026 · 7 min read</div>
+
+    <p>
+      Most zero trust programs fail in rollout, not design. Start with low-risk user groups,
+      enforce posture checks gradually, and keep exception paths observable.
+    </p>
+
+    <h2>1. Pilot Sequence</h2>
+    <p>
+      Begin with engineering and IT teams, then move to finance and HR, then vendor access.
+      Measure latency, login failure rates, and helpdesk load before each expansion.
+    </p>
+
+    <h2>2. Baseline Verification Commands</h2>
+    <pre><code># TLS and cert chain validation
+openssl s_client -connect app.example.com:443 -servername app.example.com
+
+# Verify DNS resolution from branch locations
+dig +short app.example.com
+
+# Inspect route and latency hops
+traceroute app.example.com
+
+# Capture handshake and packet behavior
+sudo tcpdump -ni any host app.example.com and port 443</code></pre>
+
+    <h2>3. Operational Guardrails</h2>
+    <p>
+      Keep policy versioning in Git, define rollback windows, and tag every emergency bypass with
+      owner, reason, and expiry.
+    </p>
+  </div>
+</body>
+</html>

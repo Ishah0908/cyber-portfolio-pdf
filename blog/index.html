@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cyber Blog | Ibrahim Sultan</title>
+  <meta name="description" content="Public cybersecurity blog by Ibrahim Sultan" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #02060d;
+      --cyan: #37d4ff;
+      --text: #dff4ff;
+      --gold: #ffb648;
+      --glass: rgba(2, 12, 20, 0.72);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 75% -5%, rgba(55, 212, 255, 0.16), transparent 45%),
+        radial-gradient(700px 500px at -10% 35%, rgba(255, 182, 72, 0.08), transparent 45%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 18px;
+    }
+    .nav {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-family: "Orbitron", sans-serif;
+      letter-spacing: 0.08em;
+      color: #dff6ff;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 1px solid rgba(55, 212, 255, 0.55);
+      background: rgba(3, 11, 18, 0.72);
+      color: #d9f4ff;
+      text-decoration: none;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.4rem 0.6rem;
+    }
+    .hero {
+      max-width: 1080px;
+      margin: 28px auto 18px;
+      border: 1px solid rgba(55, 212, 255, 0.45);
+      background: var(--glass);
+      padding: 22px;
+      box-shadow: inset 0 0 10px rgba(55, 212, 255, 0.08);
+    }
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      letter-spacing: 0.09em;
+      font-size: clamp(1.3rem, 4.8vw, 2.2rem);
+      margin-bottom: 8px;
+    }
+    .lead {
+      line-height: 1.7;
+      color: #c4e6f4;
+      max-width: 900px;
+    }
+    .grid {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .post {
+      border: 1px solid rgba(55, 212, 255, 0.45);
+      background: var(--glass);
+      padding: 14px;
+    }
+    .meta {
+      color: var(--gold);
+      font-size: 0.73rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #b9deeb;
+      font-size: 0.86rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    footer {
+      max-width: 1080px;
+      margin: 22px auto 0;
+      padding: 14px 0;
+      border-top: 1px solid rgba(55, 212, 255, 0.25);
+      color: #95cde2;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" aria-label="Primary">
+    <a class="brand" href="../index.html">IBRAHIM SULTAN</a>
+    <div class="nav-links">
+      <a class="btn" href="../index.html">Portfolio</a>
+      <a class="btn" href="./">Blog Home</a>
+      <a class="btn" href="mailto:superman090810@gmail.com">Contact</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Cybersecurity Blog</h1>
+    <p class="lead">
+      Public notes on network security, SASE, IAM, DLP, and practical defense operations.
+      Publish long-form pieces here and mirror selected posts to Hashnode or Dev.to for broader reach.
+    </p>
+  </section>
+
+  <main class="grid">
+    <article class="post">
+      <div class="meta">June 2026 · SASE</div>
+      <h2>Field Notes: Rolling Out ZTNA Without Breaking Productivity</h2>
+      <p>How to phase identity and device trust checks across users, contractors, and third-party vendors.</p>
+      <a class="btn" href="posts/sase-ztna-field-notes.html">Read Article</a>
+    </article>
+
+    <article class="post">
+      <div class="meta">June 2026 · IAM</div>
+      <h2>IAM + PAM Break-Glass Strategy for Real Incidents</h2>
+      <p>Build emergency access paths that stay auditable and reduce lateral movement under pressure.</p>
+      <a class="btn" href="posts/iam-pam-breakglass.html">Read Article</a>
+    </article>
+
+    <article class="post">
+      <div class="meta">External Mirror</div>
+      <h2>Cross-Post to Hashnode for Search Discovery</h2>
+      <p>Use this route to publish the same content externally and drive traffic back to your main domain.</p>
+      <a class="btn" href="https://hashnode.com" target="_blank" rel="noopener">Open Hashnode</a>
+    </article>
+  </main>
+
+  <footer>
+    PUBLIC BLOG NODE ACTIVE · SYNCED WITH MAIN PORTFOLIO
+  </footer>
+</body>
+</html>

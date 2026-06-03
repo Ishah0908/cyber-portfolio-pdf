@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ibrahim Sultan | Cybersecurity Archive</title>
+  <meta name="description" content="Cybersecurity PDF archive by Ibrahim Sultan" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #02060d;
+      --cyan: #37d4ff;
+      --text: #dff4ff;
+      --gold: #ffb648;
+      --glass: rgba(2, 12, 20, 0.72);
+    }
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
+    body {
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 70% -10%, rgba(55, 212, 255, 0.17), transparent 45%),
+        radial-gradient(700px 500px at -10% 30%, rgba(255, 182, 72, 0.08), transparent 45%),
+        var(--bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .status {
+      position: fixed;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      border: 1px solid rgba(55, 212, 255, 0.5);
+      padding: 0.4rem 0.7rem;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      background: rgba(2, 9, 16, 0.62);
+      backdrop-filter: blur(5px);
+    }
+
+    .top-nav {
+      position: fixed;
+      top: 46px;
+      right: 18px;
+      z-index: 21;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .top-nav a {
+      border: 1px solid rgba(55, 212, 255, 0.5);
+      background: rgba(2, 10, 18, 0.75);
+      color: #d9f4ff;
+      text-decoration: none;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.32rem 0.58rem;
+    }
+    .top-nav a:hover {
+      box-shadow: 0 0 14px rgba(55, 212, 255, 0.35);
+      border-color: rgba(255, 182, 72, 0.6);
+      color: #fff4df;
+    }
+    .rec { color: #ff5a5a; animation: blink 1.1s infinite; }
+    @keyframes blink { 50% { opacity: 0.25; } }
+
+    .shell-corner {
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--cyan);
+      z-index: 19;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+    .tl { top: 12px; left: 12px; border-right: 0; border-bottom: 0; }
+    .tr { top: 12px; right: 12px; border-left: 0; border-bottom: 0; }
+    .bl { bottom: 12px; left: 12px; border-right: 0; border-top: 0; }
+    .br { bottom: 12px; right: 12px; border-left: 0; border-top: 0; }
+
+    header {
+      min-height: 88vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 100px 20px 30px;
+    }
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(2rem, 8vw, 5.2rem);
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(55, 212, 255, 0.35);
+    }
+    h1 .accent { color: var(--cyan); }
+    .sub {
+      margin-top: 1rem;
+      color: #9fdff4;
+      letter-spacing: 0.12em;
+      font-size: clamp(0.72rem, 2vw, 1rem);
+    }
+
+    .intro {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 18px 28px;
+      color: #c9edf9;
+      line-height: 1.7;
+    }
+
+    .intro-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      position: relative;
+      border: 1px solid rgba(55, 212, 255, 0.55);
+      background: var(--glass);
+      padding: 14px;
+      box-shadow: 0 0 16px rgba(55, 212, 255, 0.22), inset 0 0 10px rgba(55, 212, 255, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 26px rgba(55, 212, 255, 0.55), inset 0 0 12px rgba(55, 212, 255, 0.12);
+    }
+
+    .tag {
+      color: var(--gold);
+      font-size: 0.73rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .title {
+      margin-top: 0.35rem;
+      font-family: "Orbitron", sans-serif;
+      color: #dff6ff;
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+    .desc {
+      margin-top: 0.45rem;
+      color: #b5dbe8;
+      font-size: 0.84rem;
+      min-height: 48px;
+    }
+
+    .actions {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 1px solid rgba(55, 212, 255, 0.6);
+      background: rgba(5, 17, 29, 0.65);
+      color: #d9f4ff;
+      padding: 0.36rem 0.58rem;
+      text-decoration: none;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .notice {
+      max-width: 1180px;
+      margin: 14px auto;
+      padding: 12px 16px;
+      border: 1px dashed rgba(255, 182, 72, 0.55);
+      color: #f4d8a5;
+      background: rgba(50, 28, 8, 0.3);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      padding: 24px 16px 34px;
+      color: #9fd8ea;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      border-top: 1px solid rgba(55, 212, 255, 0.25);
+      background: rgba(3, 11, 18, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="status">SYS <span class="rec">●</span> ONLINE · AES-256 · ◉ <span class="rec">REC</span></div>
+  <nav class="top-nav" aria-label="Primary">
+    <a href="index.html">Portfolio</a>
+    <a href="blog/">Blog</a>
+    <a href="mailto:superman090810@gmail.com">Contact</a>
+  </nav>
+  <div class="shell-corner tl"></div>
+  <div class="shell-corner tr"></div>
+  <div class="shell-corner bl"></div>
+  <div class="shell-corner br"></div>
+
+  <header>
+    <div>
+      <h1>IBRAHIM <span class="accent">SULTAN</span></h1>
+      <p class="sub">&gt; CYBERSECURITY ENGINEER · CLEARANCE: ADMIN</p>
+    </div>
+  </header>
+
+  <section class="intro">
+    <p>
+      This version is PDF-first: every card points to a PDF in the <strong>pdfs/</strong> folder.
+      When you send your final PDFs, drop them into that folder and edit the manifest in this file.
+      Hosting flow is built for GitHub → Vercel (free).
+    </p>
+    <div class="intro-actions">
+      <a class="btn" href="blog/">Open Public Blog</a>
+      <a class="btn" href="https://hashnode.com" target="_blank" rel="noopener">Mirror to Hashnode</a>
+    </div>
+  </section>
+
+  <div class="notice">
+    Placeholder entries are below so the layout is ready now. Replace file names once your PDFs are available.
+  </div>
+
+  <main id="pdfGrid" class="grid"></main>
+
+  <footer>
+    [I.B.R.A.H.I.M. SECURE INTERFACE v4.1 · PDF EDITION] · POWERED BY ARC REACTOR · STAY PATCHED
+  </footer>
+
+  <script>
+    const docs = [
+      { frame: "01", tag: "Network", title: "Enterprise Network Security Operations", desc: "Segmentation, hardening baselines, and attack-path reduction.", file: "pdfs/network-security-ops.pdf" },
+      { frame: "02", tag: "SASE", title: "SASE and ZTNA Implementation Blueprint", desc: "Identity-first access controls and branch-to-cloud architecture.", file: "pdfs/sase-ztna-blueprint.pdf" },
+      { frame: "03", tag: "IAM", title: "IAM/PAM/IGA Defense Strategy", desc: "Privileged workflows, access governance, and detection use-cases.", file: "pdfs/iam-pam-iga.pdf" },
+      { frame: "04", tag: "DLP", title: "Data Loss Prevention Playbook", desc: "Data classification, exfiltration controls, and incident handling.", file: "pdfs/dlp-playbook.pdf" },
+      { frame: "05", tag: "Cloud", title: "Cloud Security Hardening", desc: "AWS, Azure, GCP guardrails and runtime controls.", file: "pdfs/cloud-security-hardening.pdf" },
+      { frame: "06", tag: "SOC", title: "SIEM and Detection Engineering", desc: "Detection quality, tuning lifecycle, and SOAR automation patterns.", file: "pdfs/siem-detection-engineering.pdf" },
+      { frame: "07", tag: "IR", title: "Incident Response and Threat Hunting", desc: "Hunt hypotheses, triage flow, and containment execution.", file: "pdfs/ir-threat-hunting.pdf" },
+      { frame: "08", tag: "EDR", title: "Endpoint Defense Operations", desc: "Host-level telemetry, persistence checks, and response runbooks.", file: "pdfs/endpoint-defense.pdf" },
+      { frame: "09", tag: "Crypto", title: "Practical Security Commands Compendium", desc: "nmap, tcpdump, openssl, curl, jq, gpg, john, metasploit references.", file: "pdfs/security-commands.pdf" }
+    ];
+
+    const grid = document.getElementById("pdfGrid");
+    for (const d of docs) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="tag">${d.tag} · Frame ${d.frame}</div>
+        <h3 class="title">${d.title}</h3>
+        <p class="desc">${d.desc}</p>
+        <div class="actions">
+          <a class="btn" href="${d.file}" target="_blank" rel="noopener">Open</a>
+          <a class="btn" href="${d.file}" download>Download</a>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  </script>
+</body>
+</html>
