@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zero Trust in a Fortune 500 Hybrid Environment | Ibrahim Sultan</title>
+  <meta name="description" content="A field handbook for rolling out Zero Trust in a hybrid enterprise" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #02060d;
+      --cyan: #37d4ff;
+      --text: #dff4ff;
+      --gold: #ffb648;
+      --glass: rgba(2, 12, 20, 0.72);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 75% -5%, rgba(55, 212, 255, 0.16), transparent 45%),
+        radial-gradient(700px 500px at -10% 35%, rgba(255, 182, 72, 0.08), transparent 45%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 18px;
+      overflow-x: hidden;
+    }
+    .code-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      overflow: hidden;
+    }
+    .code-column {
+      position: absolute;
+      top: -20%;
+      width: 18px;
+      color: #59e0ff;
+      font-size: 11px;
+      line-height: 1.05;
+      white-space: pre;
+      text-shadow: 0 0 10px rgba(55, 212, 255, 0.5);
+      animation: codefall linear infinite;
+      user-select: none;
+    }
+    @keyframes codefall {
+      from { transform: translateY(-12%); }
+      to { transform: translateY(125vh); }
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1020px;
+      margin: 0 auto;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .brand {
+      font-family: "Orbitron", sans-serif;
+      color: #dff6ff;
+      text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .btn {
+      border: 1px solid rgba(55, 212, 255, 0.55);
+      background: rgba(3, 11, 18, 0.72);
+      color: #d9f4ff;
+      text-decoration: none;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.4rem 0.6rem;
+      display: inline-block;
+    }
+    .hero {
+      border: 1px solid rgba(55, 212, 255, 0.45);
+      background: var(--glass);
+      padding: 22px;
+      box-shadow: inset 0 0 10px rgba(55, 212, 255, 0.08);
+    }
+    .kicker {
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+    }
+    h1 {
+      font-family: "Orbitron", sans-serif;
+      letter-spacing: 0.08em;
+      line-height: 1.2;
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      margin: 10px 0;
+    }
+    .lead {
+      color: #c4e6f4;
+      line-height: 1.75;
+      max-width: 900px;
+      margin: 0;
+    }
+    .byline {
+      margin-top: 14px;
+      color: #9fdff4;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .content {
+      margin-top: 16px;
+      border: 1px solid rgba(55, 212, 255, 0.35);
+      background: rgba(2, 10, 18, 0.72);
+      padding: 20px;
+      line-height: 1.8;
+    }
+    h2 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      margin: 24px 0 10px;
+      color: #dff6ff;
+    }
+    h3 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
+      margin: 18px 0 8px;
+      color: #dff6ff;
+    }
+    p, li {
+      color: #c0dfea;
+      font-size: 0.94rem;
+    }
+    ul, ol { padding-left: 20px; }
+    .callout {
+      border: 1px solid rgba(255, 182, 72, 0.45);
+      background: rgba(50, 28, 8, 0.28);
+      padding: 14px;
+      margin: 18px 0;
+      color: #f4d8a5;
+    }
+    .term {
+      border: 1px solid rgba(55, 212, 255, 0.35);
+      background: rgba(3, 11, 18, 0.88);
+      padding: 14px;
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+    pre {
+      margin: 0;
+      color: #baf2ff;
+      white-space: pre-wrap;
+    }
+    code { color: #baf2ff; }
+    .backlink {
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    footer {
+      margin: 22px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid rgba(55, 212, 255, 0.25);
+      color: #95cde2;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="code-backdrop" id="codeBackdrop" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand" href="../index.html">IBRAHIM SULTAN</a>
+      <div>
+        <a class="btn" href="../index.html">Portfolio</a>
+        <a class="btn" href="./">Blog</a>
+      </div>
+    </div>
+
+    <a class="btn backlink" href="./">Back to Blog</a>
+
+    <section class="hero">
+      <div class="kicker">Field Handbook // Defensive Architecture</div>
+      <h1>Building Zero Trust in a Fortune 500 Hybrid Environment</h1>
+      <p class="lead">
+        Not the vendor-slide version. What it actually takes to retire the flat network you inherited:
+        the politics, the phased cutover, the controls that earn their keep, and the ones that just generate tickets.
+      </p>
+      <div class="byline">
+        <span>BY IBRAHIM SULTAN</span>
+        <span>// CYBERSECURITY ENGINEER</span>
+        <span>// ~40 MIN READ</span>
+        <span>// REV 2026.06</span>
+      </div>
+    </section>
+
+    <article class="content">
+      <h2>Why "trust nothing" is harder than it sounds</h2>
+      <p>
+        Every Zero Trust project I've been near started the same way: a slide with a castle and a moat,
+        an arrow through it, and the phrase "the perimeter is dead." Then everyone nods, and three weeks
+        later we're still arguing about whether the finance VLAN can talk to the print server.
+      </p>
+      <p>
+        In a real Fortune 500 hybrid estate you are not building Zero Trust on a blank page. You are retrofitting
+        it onto twenty years of accumulated trust. Zero Trust is less an architecture and more a multi-year campaign
+        to remove implicit trust one assumption at a time.
+      </p>
+
+      <div class="callout">
+        Working definition: Zero Trust is the practice of making every access decision, across user, device, workload,
+        and data, explicit, contextual, and revocable, rather than granting standing trust based on network location.
+      </div>
+
+      <h2>The five tenets, translated</h2>
+      <ol>
+        <li>All data sources and compute are resources.</li>
+        <li>All communication is secured regardless of location.</li>
+        <li>Access is granted per session, not per day.</li>
+        <li>Access is determined by dynamic policy.</li>
+        <li>Integrity is continuously monitored and measured.</li>
+      </ol>
+
+      <h2>Reference architecture</h2>
+      <p>
+        Keep the policy decision point and enforcement points separate in your head. The PDP evaluates identity,
+        device posture, behavior, and data sensitivity. The PEPs are everywhere traffic touches a resource.
+      </p>
+      <div class="callout">
+        Two design rules: the PDP must consume signals it doesn't own, and every PEP must fail closed for sensitive
+        resources unless a documented exception says otherwise.
+      </div>
+
+      <h2>Identity is the new perimeter</h2>
+      <p>
+        That means the IdP becomes the most attractive target in the estate. Protect it like a crown jewel. Use phishing-resistant
+        MFA, conditional access as code, and just-in-time privilege for admins.
+      </p>
+
+      <h3>Audit weak MFA coverage</h3>
+      <div class="term"><pre><code>Connect-MgGraph -Scopes "UserAuthenticationMethod.Read.All"
+Get-MgReportAuthenticationMethodUserRegistrationDetail |
+  Where-Object { $_.IsMfaCapable -eq $true -and
+    $_.MethodsRegistered -notcontains "fido2SecurityKey" -and
+    $_.MethodsRegistered -notcontains "passKeyDeviceBound" } |
+  Select-Object UserPrincipalName, MethodsRegistered</code></pre></div>
+
+      <h3>Kill standing privilege</h3>
+      <p>Standing admin rights are the fuel for every breach escalation. Move to just-in-time elevation.</p>
+
+      <h2>Microsegmentation without the meltdown</h2>
+      <p>
+        The sane order is observe, model, enforce. Most failures come from skipping straight to enforcement.
+      </p>
+      <ul>
+        <li>Phase 1: see what actually talks.</li>
+        <li>Phase 2: model the allow list in monitor-only mode.</li>
+        <li>Phase 3: enforce slowly, ring by ring.</li>
+      </ul>
+
+      <h2>What I'd tell my past self</h2>
+      <p>
+        Don't try to do everything at once. Pick one identity boundary, one workload boundary, and one data boundary.
+        Measure the reduction in lateral movement before you expand.
+      </p>
+    </article>
+
+    <footer>
+      PUBLIC ZERO TRUST ARTICLE · SYNCED WITH MAIN PORTFOLIO
+    </footer>
+  </div>
+
+  <script>
+    const backdrop = document.getElementById("codeBackdrop");
+    const codeLines = [
+      "01001000 01101000 01100101 01110010 01100101",
+      "curl -fsSL https://example.com | bash",
+      "nmap -sV -Pn target.example",
+      "tcpdump -ni any host app.example.com",
+      "openssl s_client -connect host:443",
+      "ssh -J bastion internal-host",
+      "jwt.decode(token)",
+      "siem.query('suspicious-auth')",
+      "EDR: isolate host",
+      "ZTNA: verify context",
+      "IAM: least privilege",
+      "DLP: classify and alert"
+    ];
+    for (let i = 0; i < 18; i++) {
+      const col = document.createElement("div");
+      col.className = "code-column";
+      col.style.left = `${(i * 5.5) % 100}%`;
+      col.style.animationDuration = `${11 + (i % 5) * 2.5}s`;
+      col.style.animationDelay = `${-(i * 0.6)}s`;
+      col.textContent = Array.from({ length: 22 }, (_, idx) => codeLines[(idx + i) % codeLines.length]).join("\n");
+      backdrop.appendChild(col);
+    }
+  </script>
+</body>
+</html>
