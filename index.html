@@ -38,11 +38,10 @@
       z-index: -1;
       pointer-events: none;
       opacity: 0.4;
-      overflow: visible;
+      overflow: hidden;
       transform-origin: center center;
-      transition: transform 120ms linear, opacity 120ms linear, filter 120ms linear;
+      transition: opacity 120ms linear, filter 120ms linear;
       will-change: transform, filter, opacity;
-      min-height: 100vh;
     }
     .code-backdrop.terminal {
       filter: contrast(1.45) saturate(1.3) blur(0.4px);
@@ -53,16 +52,16 @@
       position: absolute;
       top: 0;
       width: 210px;
+      height: 100vh;
       color: #59e0ff;
       font-size: 12px;
       line-height: 1.42;
       letter-spacing: 0.01em;
       white-space: pre-wrap;
-      overflow: visible;
+      overflow: hidden;
       text-shadow: 0 0 16px rgba(55, 212, 255, 0.7);
       user-select: none;
       opacity: 1;
-      min-height: 500vh;
       z-index: 1;
     }
     @keyframes codefall {
@@ -884,43 +883,57 @@
       "python -m py_compile *.py --verify // AST verification"
     ];
 
+    const codeTimers = [];
+
     function buildBackdrop() {
       const width = window.innerWidth;
       const columnCount = width < 680 ? 2 : Math.max(3, Math.floor(width / 300));
       const spacing = 100 / columnCount;
+
+      // clear any running typing timers from a previous build (e.g. on resize)
+      while (codeTimers.length) clearTimeout(codeTimers.pop());
       backdrop.innerHTML = "";
+
+      // enough lines to fill the full viewport height (line-height ~17px), plus buffer
+      const lineHeightPx = 12 * 1.42;
+      const linesNeeded = Math.ceil(window.innerHeight / lineHeightPx) + 6;
+
       for (let i = 0; i < columnCount; i++) {
         const col = document.createElement("div");
         col.className = "code-column";
         col.style.left = `${(i * spacing + 2).toFixed(2)}%`;
         const lines = Array.from(
-          { length: 14 },
-          (_, idx) => codeLines[(idx + (i * 3)) % codeLines.length]
+          { length: linesNeeded },
+          (_, idx) => codeLines[(idx + i * 5) % codeLines.length]
         );
         const fullText = lines.join("\n");
-        col.innerHTML = "";
-        typeCodeColumn(col, fullText, i * 80);
+        typeCodeColumn(col, fullText, i * 140);
         backdrop.appendChild(col);
       }
     }
 
     function typeCodeColumn(element, text, delay) {
+      const typingSpeed = 6;   // ms per char
+      const holdAfterFull = 2600; // pause once a column is full before rewriting
       let index = 0;
-      const typingSpeed = 8;
-      const cycleDelay = 4000;
 
       function typeCharacter() {
         if (index < text.length) {
           element.textContent = text.substring(0, index + 1);
           index++;
-          setTimeout(typeCharacter, typingSpeed);
+          codeTimers.push(setTimeout(typeCharacter, typingSpeed));
         } else {
-          // Keep the full text visible, don't clear
+          // keep it visible, then clear and re-type so code keeps "getting written"
           element.textContent = text;
+          codeTimers.push(setTimeout(() => {
+            index = 0;
+            element.textContent = "";
+            typeCharacter();
+          }, holdAfterFull));
         }
       }
 
-      setTimeout(typeCharacter, delay);
+      codeTimers.push(setTimeout(typeCharacter, delay));
     }
 
     function onScrollBackdrop() {
@@ -929,16 +942,14 @@
       const zoom = 1 + progress * 0.62;
       const crunchX = progress > 0.86 ? 1 - ((progress - 0.86) / 0.14) * 0.34 : 1;
       const crunchY = progress > 0.86 ? 1 + ((progress - 0.86) / 0.14) * 0.18 : 1;
-      const opacity = 0.4 + progress * 0.1;
+      const opacity = 0.4 + progress * 0.12;
 
-      const scrollOffset = window.scrollY * 0.6;
-
+      // No downward parallax: the backdrop is fixed and fills the viewport, so the
+      // code stays visible across the whole page. We only zoom (and shake at the end).
       backdrop.style.setProperty("--zoom", zoom.toFixed(3));
       backdrop.style.opacity = opacity.toFixed(3);
       if (!backdrop.classList.contains("terminal")) {
-        backdrop.style.transform = `scale(${(zoom * crunchX).toFixed(3)}, ${(zoom * crunchY).toFixed(3)}) translateY(${scrollOffset}px)`;
-      } else {
-        backdrop.style.transform = `translateY(${scrollOffset}px)`;
+        backdrop.style.transform = `scale(${(zoom * crunchX).toFixed(3)}, ${(zoom * crunchY).toFixed(3)})`;
       }
 
       if (progress > 0.75) {
