@@ -99,7 +99,7 @@
   .ln,.lnd,.fl{fill:none;stroke:rgba(55,212,255,.82);stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arr);animation:flowMarch .9s linear infinite;stroke-dasharray:7 6}
   .lnd{stroke-dasharray:7 5}
   .phl,.num{font-family:'Orbitron';fill:#dff6ff}
-  .phs{font-family:'Share Tech Mono';fill:#9fc4d8}
+  .phs{font-family:'Share Tech Mono';font-size:11px;fill:#9fc4d8}
 
   /* table */
   .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
@@ -130,8 +130,8 @@
   <p class="standfirst">Not the vendor-slide version. What it actually takes to retire the flat network you inherited: the politics, the phased cutover, the controls that earn their keep, and the ones that just generate tickets.</p>
   <div class="byline">
     <span class="dot"></span>
-    <span>BY IBRAHIM SULTAN</span>
-    <span>// CYBERSECURITY ENGINEER</span>
+    
+    <span>CYBERSECURITY ENGINEER</span>
     <span>// ~25 MIN READ</span>
     <span>// REV 2025.11</span>
   </div>
@@ -359,20 +359,20 @@
       <rect class="ph" x="20" y="50" width="230" height="120" rx="8"/>
       <text class="num" x="42" y="90">01</text>
       <text class="phl" x="42" y="118">OBSERVE</text>
-      <text class="phs" x="42" y="138">map every flow, log nothing blocked</text>
+      <text class="phs" x="42" y="138">map every flow, log all</text>
       <text class="phs" x="42" y="153">4-8 weeks minimum</text>
 
       <rect class="ph" x="295" y="50" width="230" height="120" rx="8"/>
       <text class="num" x="317" y="90">02</text>
       <text class="phl" x="317" y="118">MODEL</text>
-      <text class="phs" x="317" y="138">group by app/tier, write ALLOW</text>
-      <text class="phs" x="317" y="153">rules in monitor-only</text>
+      <text class="phs" x="317" y="138">group by app + tier</text>
+      <text class="phs" x="317" y="153">allow rules, monitor</text>
 
       <rect class="ph" x="570" y="50" width="230" height="120" rx="8"/>
       <text class="num" x="592" y="90">03</text>
       <text class="phl" x="592" y="118">ENFORCE</text>
-      <text class="phs" x="592" y="138">flip to deny, ring by ring</text>
-      <text class="phs" x="592" y="153">keep rollback one command away</text>
+      <text class="phs" x="592" y="138">flip to deny by ring</text>
+      <text class="phs" x="592" y="153">rollback one command</text>
 
       <path class="fl" d="M250,110 L293,110"/>
       <path class="fl" d="M525,110 L568,110"/>
@@ -593,7 +593,7 @@
 
 <footer>
   <div class="rule"></div>
-  <p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // ZERO TRUST <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+  <p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // ZERO TRUST <span class="c">]</span> &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
   <p style="margin-top:8px;opacity:.6">This is defensive architecture guidance. Test every command in a lab before production. Nothing here is legal or compliance advice.</p>
 </footer>
 
