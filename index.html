@@ -35,9 +35,9 @@
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 0;
+      z-index: -1;
       pointer-events: none;
-      opacity: 0.25;
+      opacity: 0.4;
       overflow: visible;
       transform-origin: center center;
       transition: transform 120ms linear, opacity 120ms linear, filter 120ms linear;
@@ -59,10 +59,10 @@
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       overflow: visible;
-      text-shadow: 0 0 12px rgba(55, 212, 255, 0.5);
+      text-shadow: 0 0 16px rgba(55, 212, 255, 0.7);
       user-select: none;
-      opacity: 0.85;
-      min-height: 400vh;
+      opacity: 1;
+      min-height: 500vh;
       z-index: 1;
     }
     @keyframes codefall {
@@ -293,7 +293,7 @@
     .tunnel-viewport {
       position: relative;
       height: auto;
-      padding: 20px 15px;
+      padding: 15px 10px;
       overflow: visible;
     }
     .tunnel-stage {
@@ -301,10 +301,20 @@
       width: 100%;
       height: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      max-width: 1000px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 850px;
       margin: 0 auto;
+    }
+    @media (max-width: 1024px) {
+      .tunnel-stage {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .tunnel-stage {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
     .tunnel-hud {
       display: none;
@@ -328,10 +338,10 @@
     .tunnel-card {
       position: relative;
       width: 100%;
-      aspect-ratio: 1;
+      aspect-ratio: 0.95;
       border: 1px solid rgba(55, 212, 255, 0.5);
-      background: rgba(7, 24, 40, 0.8);
-      box-shadow: 0 0 16px rgba(55, 212, 255, 0.15);
+      background: rgba(7, 24, 40, 0.85);
+      box-shadow: 0 0 14px rgba(55, 212, 255, 0.12);
       overflow: hidden;
       padding: 0;
       cursor: pointer;
