@@ -91,7 +91,12 @@
   figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:linear-gradient(180deg,rgba(12,24,36,.92),rgba(10,20,30,.9));padding:24px 18px 14px;
     box-shadow:0 18px 36px -24px rgba(55,212,255,.46)}
   figure svg{display:block;width:100%;height:auto}
+  figure img{display:block;width:100%;height:auto;border-radius:8px}
   figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  /* drop-your-own-photo placeholder */
+  .shot{border:1.5px dashed var(--hud-faint);border-radius:8px;min-height:200px;display:flex;align-items:center;justify-content:center;text-align:center;
+    background:repeating-linear-gradient(45deg,rgba(55,212,255,.03) 0 12px,transparent 12px 24px);color:var(--ink-dim);font-family:'Share Tech Mono';font-size:12px;letter-spacing:1px;padding:24px}
+  .shot span{color:var(--hud)}
 
   /* table */
   .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
@@ -151,6 +156,7 @@ This is an educational build for lawful hobby and research use. In the US, regis
 
 <section id="what"><span class="h2num">// 01</span>
 <h2>What you are building</h2>
+<p>I built my first drone because I wanted to understand the whole stack, solder up, not just fly something off a shelf. The first frame I printed cracked on its second hard landing. The first time I trusted software in the flight loop, it twitched and I learned why you never do that. This handbook is the guide I wish I'd had on day one: every part, every wire, every command, and the mistakes that cost me a weekend so they don't cost you one.</p>
 <p>Most "drone build" guides stop at a radio controller and line-of-sight flying. This one goes further: a quadcopter with two brains. A <strong>flight controller</strong> handles the fast, life-or-death loop, keeping the aircraft stable. A <strong>Raspberry Pi companion computer</strong> rides along for everything smart, and a <strong>4G/LTE modem with a SIM card</strong> gives the whole thing an internet connection in the air. The result is a drone you can command, monitor, and stream video from using a laptop anywhere with a signal, and that can optionally make its own decisions through the <strong>Claude AI API</strong>.</p>
 <p>The split matters. You never want a cloud round-trip or a Python script in the loop that keeps the props spinning, that is the flight controller's job and it must work even if everything else dies. The Pi and the cellular link sit <em>on top</em>, sending high-level commands ("go to this waypoint", "hold", "return home") and pulling back telemetry and video. If the Pi crashes, the aircraft still flies and fails safe.</p>
 <div class="callout"><span class="l i">The mental model</span>
@@ -203,6 +209,11 @@ Flight controller = reflexes (milliseconds, never offloaded). Raspberry Pi = the
 </ul>
 <div class="callout"><span class="l i">Which to pick</span>
 If this is your first build or you care about failsafe behavior, use a <strong>standalone Pixhawk/F7 with the Pi as companion</strong>, the separation is the whole safety story. Reach for a flight HAT when you want the smallest, most integrated airframe and are comfortable that the Pi is now flight-critical. Everything else in this handbook, cellular link, laptop control, the Claude brain, is identical either way.</div>
+
+<h3>Or: write your own flight controller (the deep-end path)</h3>
+<p>There is a third path worth naming, because it teaches you more than any other: <strong>roll your own flight controller on a microcontroller.</strong> A Raspberry Pi <span class="mono">Pico</span> / Pico 2 with an <span class="mono">MPU6050</span> gyro, reading an IBUS/ELRS receiver and running your own <strong>PID rate-mode</strong> loop, will absolutely fly a quad, and you will understand stabilization in your bones afterward. It is a fantastic learning project (open-source bases like Tim Hanewich's "Scout" are a great read).</p>
+<div class="callout war"><span class="l">Learn on it, don't deploy on it</span>
+Hand-rolled firmware is the best way to <em>learn</em> and the worst way to <em>deploy</em>. ArduPilot and PX4 represent thousands of hours of failsafe logic, EKF tuning, and crash testing you cannot reproduce in a summer. Build the Pico controller on a tethered test rig to understand PID, then fly the real missions on a proven autopilot. Best of both worlds.</div>
 </section>
 
 <section id="bom"><span class="h2num">// 03</span>
@@ -274,6 +285,11 @@ Charge nothing and connect no battery until the very end of assembly. Most magic
 <h3>1. Frame and motors</h3>
 <p>Assemble the frame. Mount the four motors on the arms and route their three wires toward the center. Note motor spin directions, the build instructions or your flight-controller software will tell you which two must spin reversed. Leave wires slightly long; you trim on final solder.</p>
 
+<figure>
+  <div class="shot">// DROP YOUR OWN PHOTO HERE &mdash; <span>frame + four motors mounted, wires routed to center</span><br>replace this block with: &lt;img src="assets/drone/01-frame.jpg" alt="frame and motors"&gt;</div>
+  <figcaption>FIG.A: Your airframe at stage 1. Real photos of your own build make this handbook yours, swap each placeholder for a shot from your bench.</figcaption>
+</figure>
+
 <h3>2. ESC, power distribution, and soldering</h3>
 <p>Solder the four motor triples to the 4-in-1 ESC. Solder the XT60 battery lead and the ESC's power pads, observing polarity, reversing this is the classic "magic smoke" mistake. Add a BEC if your Pi/peripherals need a clean 5V rail separate from the flight controller.</p>
 <div class="callout danger"><span class="l">Polarity = no second chances</span>
@@ -290,6 +306,9 @@ FC TELEM2 TX  <span class="ok">&#8594;</span>  Pi GPIO15 (RX)
 FC TELEM2 RX  <span class="ok">&#8592;</span>  Pi GPIO14 (TX)
 FC GND        <span class="ok">&#8212;</span>  Pi GND
 <span class="cmt"># baud 921600, MAVLink2 — set in the FC's serial config</span></pre></div>
+
+<div class="callout"><span class="l i">What broke for me, so it doesn't for you</span>
+<strong>3D-printed frames are for prototyping, not flying.</strong> Mine cracked on a hard landing, fine for fit-checking the layout, but cut the real airframe from carbon fiber. <strong>Vibration eats GPS and gyros</strong>; soft-mount the flight controller and keep the GPS on a mast away from power wires. <strong>Cheap connectors melt</strong> under current, solder clean joints and use proper XT60s. And the protocol matters: a tidy digital link (IBUS/CRSF) to the receiver beats a fistful of PWM wires and updates far faster.</div>
 
 <h3>5. Calibrate and bench test (no props)</h3>
 <p>Before propellers, connect the radio and flight-controller software, then calibrate the accelerometer, compass, ESCs, and radio. Confirm the motors respond to throttle and spin the correct direction. <strong>Props stay off</strong> until every check passes and you have a working return-to-home and low-battery failsafe configured.</p>
@@ -345,6 +364,8 @@ Hardware drifts, ports change, modems differ. A repo lets the install script det
 <span class="ok">Flight battery OK · GPS OK · EKF healthy · ready</span></pre></div>
 <div class="callout war"><span class="l">Latency is real</span>
 Cellular adds 40–120 ms and can hiccup. That is fine for high-level commands and monitoring; it is <strong>not</strong> fine for manual stick-flying acro. Keep the ELRS radio as your hands-on control and use the cellular link for missions, telemetry, and the AI layer. Always configure a <strong>link-loss failsafe</strong> (RTH or land) so a dropped signal never means a flyaway.</div>
+<h3>Want low-latency eyes? Add analog FPV</h3>
+<p>The cellular video is great for situational awareness but too laggy to fly by. If you want to <em>fly by camera</em>, add a classic <strong>analog FPV</strong> path alongside the cellular one: a small camera into an analog video transmitter (VTX) feeding FPV goggles. It is a separate, near-instant link, builders routinely hit <strong>~50 ms glass-to-goggles</strong>, completely independent of the mobile network. Use cellular for the brain and the map; use analog FPV for your eyes.</p>
 </section>
 
 <section id="ai"><span class="h2num">// 08</span>
@@ -388,6 +409,11 @@ Never let the model command throttle or attitude directly, and never trust it as
 <li>Cellular link comes up on boot and the laptop GCS shows live telemetry.</li>
 <li>Low-battery and link-loss failsafes are configured and tested.</li>
 </ul>
+<figure>
+  <div class="shot">// DROP YOUR OWN PHOTO HERE &mdash; <span>the finished aircraft, ready for its first hover</span><br>replace this block with: &lt;img src="assets/drone/finished.jpg" alt="finished drone"&gt;</div>
+  <figcaption>FIG.B: The payoff shot. Nothing sells a build guide like a photo of the real thing you made flying.</figcaption>
+</figure>
+
 <h4>First hover</h4>
 <ul>
 <li>Props on, open area, away from people, legal airspace, full battery.</li>
