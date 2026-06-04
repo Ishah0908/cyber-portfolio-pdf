@@ -235,28 +235,268 @@
       font-size: 0.9rem;
       line-height: 1.65;
     }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    .tunnel-meta {
+      margin-top: 10px;
+      display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
-    .shot {
-      border: 1px solid rgba(55, 212, 255, 0.45);
-      background: rgba(2, 12, 20, 0.7);
-      padding: 6px;
+    .tunnel-tag {
+      border: 1px solid rgba(55, 212, 255, 0.42);
+      background: rgba(8, 23, 37, 0.58);
+      color: #c5eeff;
+      padding: 0.24rem 0.46rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
-    .shot img {
+    .data-tunnel {
+      position: relative;
+      margin-top: 14px;
+      min-height: 1420px;
+      border: 1px solid rgba(55, 212, 255, 0.38);
+      background:
+        radial-gradient(circle at 50% 18%, rgba(55, 212, 255, 0.24), transparent 24%),
+        radial-gradient(circle at 50% 52%, rgba(55, 212, 255, 0.1), transparent 42%),
+        linear-gradient(180deg, rgba(4, 13, 22, 0.92), rgba(2, 8, 15, 0.98));
+      box-shadow: inset 0 0 70px rgba(55, 212, 255, 0.1), 0 0 28px rgba(55, 212, 255, 0.16);
+      overflow: hidden;
+    }
+    .data-tunnel::before,
+    .data-tunnel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .data-tunnel::before {
+      background:
+        repeating-linear-gradient(90deg, rgba(55, 212, 255, 0.08) 0 1px, transparent 1px 88px),
+        repeating-linear-gradient(0deg, rgba(55, 212, 255, 0.06) 0 1px, transparent 1px 62px);
+      mask-image: radial-gradient(circle at 50% 42%, black 0, black 34%, transparent 86%);
+      opacity: 0.42;
+    }
+    .data-tunnel::after {
+      background: linear-gradient(180deg, rgba(2, 8, 15, 0.08), rgba(2, 8, 15, 0.8));
+    }
+    .tunnel-viewport {
+      position: sticky;
+      top: 88px;
+      height: min(78vh, 760px);
+      perspective: 2100px;
+      perspective-origin: center 38%;
+      overflow: hidden;
+    }
+    .tunnel-stage {
+      position: relative;
       width: 100%;
-      height: 260px;
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+    .tunnel-hud {
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      right: 22px;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #9ddff0;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    .tunnel-hud strong {
+      color: #eefaff;
+      font-weight: 700;
+    }
+    .tunnel-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: clamp(190px, 23vw, 280px);
+      aspect-ratio: 0.82;
+      border: 1px solid rgba(72, 223, 255, 0.65);
+      background: linear-gradient(180deg, rgba(7, 24, 40, 0.9), rgba(3, 12, 21, 0.92));
+      box-shadow: 0 0 24px rgba(55, 212, 255, 0.22), inset 0 0 26px rgba(83, 215, 255, 0.14);
+      transform-style: preserve-3d;
+      overflow: hidden;
+      padding: 0;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+    .tunnel-card:hover,
+    .tunnel-card:focus-visible {
+      border-color: rgba(179, 239, 255, 0.95);
+      box-shadow: 0 0 38px rgba(55, 212, 255, 0.4), inset 0 0 30px rgba(83, 215, 255, 0.16);
+      filter: saturate(1.08);
+      outline: none;
+    }
+    .tunnel-card img {
+      position: absolute;
+      inset: 12px 12px 48px;
+      width: calc(100% - 24px);
+      height: calc(100% - 60px);
       object-fit: cover;
       display: block;
+      filter: saturate(0.76) hue-rotate(178deg) brightness(0.86) contrast(1.05);
+      transition: filter 180ms ease, transform 180ms ease;
     }
-    .cap {
-      margin-top: 6px;
-      color: #a8d8e8;
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
+    .tunnel-card:hover img,
+    .tunnel-card:focus-visible img {
+      filter: saturate(1) hue-rotate(0deg) brightness(1) contrast(1.04);
+      transform: scale(1.015);
+    }
+    .tunnel-card::before,
+    .tunnel-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .tunnel-card::before {
+      background:
+        linear-gradient(180deg, rgba(96, 228, 255, 0.18), rgba(96, 228, 255, 0.04) 32%, rgba(6, 18, 28, 0.08) 100%),
+        linear-gradient(120deg, rgba(83, 215, 255, 0.16), transparent 40%, rgba(83, 215, 255, 0.12) 100%);
+      mix-blend-mode: screen;
+      opacity: 0.92;
+      transition: opacity 180ms ease;
+    }
+    .tunnel-card:hover::before,
+    .tunnel-card:focus-visible::before {
+      opacity: 0.18;
+    }
+    .tunnel-card::after {
+      background: repeating-linear-gradient(180deg, rgba(182, 241, 255, 0.13) 0 1px, transparent 1px 6px);
+      animation: scanlines 5.4s linear infinite;
+      opacity: 0.55;
+    }
+    .tunnel-card[data-active="true"] {
+      border-color: rgba(255, 182, 72, 0.82);
+      box-shadow: 0 0 58px rgba(55, 212, 255, 0.46), 0 0 34px rgba(255, 182, 72, 0.26), inset 0 0 28px rgba(130, 231, 255, 0.14);
+    }
+    .frame-bracket {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(130, 231, 255, 0.88);
+      z-index: 2;
+      filter: drop-shadow(0 0 10px rgba(55, 212, 255, 0.42));
+    }
+    .frame-bracket.tl { top: 7px; left: 7px; border-right: 0; border-bottom: 0; }
+    .frame-bracket.tr { top: 7px; right: 7px; border-left: 0; border-bottom: 0; }
+    .frame-bracket.bl { bottom: 36px; left: 7px; border-right: 0; border-top: 0; }
+    .frame-bracket.br { bottom: 36px; right: 7px; border-left: 0; border-top: 0; }
+    .tunnel-index,
+    .tunnel-label,
+    .tunnel-action {
+      position: absolute;
+      left: 14px;
+      z-index: 2;
       text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+    .tunnel-index {
+      top: 14px;
+      color: #e8fbff;
+      font-size: 0.62rem;
+    }
+    .tunnel-label {
+      right: 14px;
+      left: 14px;
+      bottom: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #c9f4ff;
+      font-size: 0.62rem;
+    }
+    .tunnel-label span:last-child {
+      color: rgba(255, 182, 72, 0.92);
+    }
+    .tunnel-action {
+      right: 14px;
+      left: auto;
+      top: 14px;
+      color: rgba(255, 182, 72, 0.95);
+      font-size: 0.56rem;
+    }
+    .enhance-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(1, 7, 13, 0.82);
+      backdrop-filter: blur(14px);
+    }
+    .enhance-modal[hidden] {
+      display: none;
+    }
+    .enhance-panel {
+      position: relative;
+      width: min(920px, 100%);
+      border: 1px solid rgba(78, 225, 255, 0.64);
+      background: linear-gradient(180deg, rgba(8, 22, 36, 0.96), rgba(3, 10, 18, 0.96));
+      box-shadow: 0 0 42px rgba(55, 212, 255, 0.26);
+      padding: 18px 18px 16px;
+    }
+    .enhance-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: #def8ff;
+      font-size: 0.74rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .enhance-close {
+      border: 1px solid rgba(78, 225, 255, 0.58);
+      background: rgba(5, 18, 29, 0.82);
+      color: #e6fbff;
+      padding: 0.38rem 0.64rem;
+      font: inherit;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .enhance-view {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(78, 225, 255, 0.34);
+      background: rgba(4, 12, 20, 0.86);
+    }
+    .enhance-view::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(180deg, rgba(176, 239, 255, 0.12) 0 1px, transparent 1px 7px);
+      pointer-events: none;
+    }
+    .enhance-view img {
+      width: 100%;
+      max-height: 72vh;
+      object-fit: contain;
+      display: block;
+      filter: saturate(0.92) brightness(0.98);
+      background: radial-gradient(circle at top, rgba(68, 220, 255, 0.12), transparent 40%);
+    }
+    .enhance-caption {
+      margin-top: 12px;
+      color: #bfe8f7;
+      font-size: 0.86rem;
+      line-height: 1.6;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    @keyframes scanlines {
+      from { transform: translateY(-8px); }
+      to { transform: translateY(8px); }
     }
 
     .hub {
@@ -329,8 +569,24 @@
       .about {
         grid-template-columns: 1fr;
       }
-      .shot img {
-        height: 220px;
+      .data-tunnel {
+        min-height: 1120px;
+      }
+      .tunnel-viewport {
+        top: 74px;
+        height: min(66vh, 620px);
+      }
+      .tunnel-card {
+        width: min(68vw, 250px);
+      }
+      .tunnel-hud {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        font-size: 0.58rem;
+      }
+      .enhance-panel {
+        padding: 14px;
       }
       .status {
         width: calc(100% - 24px);
@@ -423,18 +679,84 @@
           My boys, Abdullah and Mustafa, are the apple of my eyes and the light of my heart.
           I love them deeply, I miss them every day, and I believe one day they will be united with me.
         </p>
+        <div class="tunnel-meta" aria-hidden="true">
+          <span class="tunnel-tag">Data Tunnel Gallery</span>
+          <span class="tunnel-tag">8 Memory Frames</span>
+          <span class="tunnel-tag">Holo Scan Active</span>
+        </div>
       </div>
-      <div class="gallery">
-        <figure class="shot"><img src="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" alt="Ibrahim with Abdullah" /><figcaption class="cap">Me and Abdullah - My Heart, My Strength</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_6498_2.jpg" alt="Mustafa Shah portrait" /><figcaption class="cap">Mustafa Shah - My Little Sweetheart</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_6468.JPG" alt="Abdullah and Mustafa together" /><figcaption class="cap">Abdullah and Mustafa</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_3671.JPG" alt="Ibrahim Sultan childhood photo" /><figcaption class="cap">Ibrahim Sultan - Me in My Childhood</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_3675.jpg" alt="Mustafa and Abdullah moment" /><figcaption class="cap">My Boys, My Greatest Blessing</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_3807.jpg" alt="Professional photo at Citi" /><figcaption class="cap">At Citi</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_1108.jpg" alt="Professional photo at Charles Schwab" /><figcaption class="cap">At Charles Schwab</figcaption></figure>
-        <figure class="shot"><img src="assets/photos/IMG_0717.jpg" alt="Road trip photo" /><figcaption class="cap">Road Trip</figcaption></figure>
+      <div class="data-tunnel" id="dataTunnel">
+        <div class="tunnel-viewport">
+          <div class="tunnel-hud" aria-hidden="true">
+            <span>Archive Path <strong>Data Tunnel</strong></span>
+            <span>Click Frame <strong>Enhance</strong></span>
+          </div>
+          <div class="tunnel-stage" id="tunnelStage">
+            <button class="tunnel-card" type="button" data-title="Me and Abdullah - My Heart, My Strength" data-frame="Frame 01" data-image="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" aria-label="Open Me and Abdullah image">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 01</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" alt="Ibrahim with Abdullah" />
+              <span class="tunnel-label"><span>Me and Abdullah</span><span>Heartline</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="Mustafa Shah - My Little Sweetheart" data-frame="Frame 02" data-image="assets/photos/IMG_6498_2.jpg" aria-label="Open Mustafa Shah portrait">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 02</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_6498_2.jpg" alt="Mustafa Shah portrait" />
+              <span class="tunnel-label"><span>Mustafa Shah</span><span>Signal Child</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="Abdullah and Mustafa" data-frame="Frame 03" data-image="assets/photos/IMG_6468.JPG" aria-label="Open Abdullah and Mustafa together">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 03</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_6468.JPG" alt="Abdullah and Mustafa together" />
+              <span class="tunnel-label"><span>Abdullah and Mustafa</span><span>Dual Orbit</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="Ibrahim Sultan - Me in My Childhood" data-frame="Frame 04" data-image="assets/photos/IMG_3671.JPG" aria-label="Open Ibrahim childhood image">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 04</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_3671.JPG" alt="Ibrahim Sultan childhood photo" />
+              <span class="tunnel-label"><span>Childhood Archive</span><span>Origin Node</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="My Boys, My Greatest Blessing" data-frame="Frame 05" data-image="assets/photos/IMG_3675.jpg" aria-label="Open boys moment image">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 05</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_3675.jpg" alt="Mustafa and Abdullah moment" />
+              <span class="tunnel-label"><span>Greatest Blessing</span><span>Family Core</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="At Citi" data-frame="Frame 06" data-image="assets/photos/IMG_3807.jpg" aria-label="Open Citi photo">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 06</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_3807.jpg" alt="Professional photo at Citi" />
+              <span class="tunnel-label"><span>At Citi</span><span>Mission Desk</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="At Charles Schwab" data-frame="Frame 07" data-image="assets/photos/IMG_1108.jpg" aria-label="Open Charles Schwab photo">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 07</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_1108.jpg" alt="Professional photo at Charles Schwab" />
+              <span class="tunnel-label"><span>At Charles Schwab</span><span>Blue Shift</span></span>
+            </button>
+            <button class="tunnel-card" type="button" data-title="Road Trip" data-frame="Frame 08" data-image="assets/photos/IMG_0717.jpg" aria-label="Open road trip image">
+              <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
+              <span class="tunnel-index">Frame 08</span><span class="tunnel-action">Enhance</span>
+              <img src="assets/photos/IMG_0717.jpg" alt="Road trip photo" />
+              <span class="tunnel-label"><span>Road Trip</span><span>Transit Memory</span></span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
+
+    <div class="enhance-modal" id="enhanceModal" hidden>
+      <div class="enhance-panel" role="dialog" aria-modal="true" aria-labelledby="enhanceTitle">
+        <div class="enhance-head">
+          <span id="enhanceTitle">Enhance // Visual Archive</span>
+          <button class="enhance-close" type="button" id="enhanceClose">Close</button>
+        </div>
+        <div class="enhance-view">
+          <img id="enhanceImage" src="" alt="" />
+        </div>
+        <p class="enhance-caption" id="enhanceCaption"></p>
+      </div>
+    </div>
 
     <section class="hub" aria-label="Main Navigation">
       <article class="hub-card">
@@ -462,6 +784,12 @@
 
   <script>
     const backdrop = document.getElementById("codeBackdrop");
+    const tunnelSection = document.getElementById("dataTunnel");
+    const tunnelCards = Array.from(document.querySelectorAll(".tunnel-card"));
+    const enhanceModal = document.getElementById("enhanceModal");
+    const enhanceImage = document.getElementById("enhanceImage");
+    const enhanceCaption = document.getElementById("enhanceCaption");
+    const enhanceClose = document.getElementById("enhanceClose");
     const codeLines = [
       "falco -c /etc/falco/falco.yaml",
       "tetragon run --config tetragon.yaml",
@@ -534,10 +862,75 @@
       }
     }
 
+    function updateTunnel() {
+      if (!tunnelSection || tunnelCards.length === 0) {
+        return;
+      }
+
+      const rect = tunnelSection.getBoundingClientRect();
+      const viewport = window.innerHeight || 1;
+      const progress = Math.min(1, Math.max(0, (viewport * 0.58 - rect.top) / Math.max(1, rect.height - viewport * 0.24)));
+      const eased = progress * progress * (3 - 2 * progress);
+      const center = (tunnelCards.length - 1) / 2;
+
+      tunnelCards.forEach((card, index) => {
+        const distance = index - center;
+        const depth = -1280 + index * -250 + eased * 2250;
+        const nearFactor = Math.max(0, 1 - Math.abs(depth) / 1100);
+        const lateral = distance * (126 + Math.max(0, -depth) * 0.035) + Math.sin((eased + index * 0.08) * Math.PI) * 24;
+        const vertical = distance * distance * 12 - eased * 68 + Math.cos((eased * 2 + index * 0.15) * Math.PI) * 10 + (index % 2 === 0 ? -16 : 16);
+        const rotateY = distance * -9 - 14 + eased * 22;
+        const rotateX = -9 + nearFactor * 10;
+        const scale = 0.7 + nearFactor * 0.48 + eased * 0.04;
+        const opacity = 0.16 + nearFactor * 0.9;
+        const highlightIndex = Math.round(eased * (tunnelCards.length - 1));
+
+        card.style.transform = `translate3d(${lateral}px, ${vertical}px, ${depth}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
+        card.style.opacity = opacity.toFixed(3);
+        card.style.zIndex = String(1000 + Math.round(nearFactor * 1000));
+        card.style.filter = index === highlightIndex ? "brightness(1.05) saturate(1.12)" : `brightness(${(0.78 + nearFactor * 0.22).toFixed(3)}) saturate(${(0.86 + nearFactor * 0.18).toFixed(3)})`;
+        card.dataset.active = String(index === highlightIndex);
+      });
+    }
+
+    function openEnhance(card) {
+      enhanceImage.src = card.dataset.image;
+      enhanceImage.alt = card.querySelector("img").alt;
+      enhanceCaption.textContent = `${card.dataset.frame} // ${card.dataset.title}`;
+      enhanceModal.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeEnhance() {
+      enhanceModal.hidden = true;
+      enhanceImage.src = "";
+      enhanceCaption.textContent = "";
+      document.body.style.overflow = "";
+    }
+
+    tunnelCards.forEach((card) => {
+      card.addEventListener("click", () => openEnhance(card));
+    });
+
+    enhanceClose.addEventListener("click", closeEnhance);
+    enhanceModal.addEventListener("click", (event) => {
+      if (event.target === enhanceModal) {
+        closeEnhance();
+      }
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !enhanceModal.hidden) {
+        closeEnhance();
+      }
+    });
+
     buildBackdrop();
     onScrollBackdrop();
+    updateTunnel();
     window.addEventListener("resize", buildBackdrop);
     window.addEventListener("scroll", onScrollBackdrop, { passive: true });
+    window.addEventListener("resize", updateTunnel);
+    window.addEventListener("scroll", updateTunnel, { passive: true });
 
   </script>
 </body>
