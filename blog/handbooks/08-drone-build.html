@@ -379,6 +379,39 @@ Hardware drifts, ports change, modems differ. A repo lets the install script det
 Cellular adds 40–120 ms and can hiccup. That is fine for high-level commands and monitoring; it is <strong>not</strong> fine for manual stick-flying acro. Keep the ELRS radio as your hands-on control and use the cellular link for missions, telemetry, and the AI layer. Always configure a <strong>link-loss failsafe</strong> (RTH or land) so a dropped signal never means a flyaway.</div>
 <h3>Want low-latency eyes? Add analog FPV</h3>
 <p>The cellular video is great for situational awareness but too laggy to fly by. If you want to <em>fly by camera</em>, add a classic <strong>analog FPV</strong> path alongside the cellular one: a small camera into an analog video transmitter (VTX) feeding FPV goggles. It is a separate, near-instant link, builders routinely hit <strong>~50 ms glass-to-goggles</strong>, completely independent of the mobile network. Use cellular for the brain and the map; use analog FPV for your eyes.</p>
+
+<h3>Return-to-home: the failsafe that saves the aircraft</h3>
+<p>Cellular links drop. You will lose signal behind a building, at the edge of a tower's range, or when the carrier just hiccups. <strong>The aircraft must never interpret "lost link" as "keep going".</strong> The answer is <strong>Return-To-Home (RTH)</strong>, also called RTL: the moment a link is lost, the flight controller climbs to a safe altitude, flies back to the GPS point where it was armed, and loiters or lands. This is built into ArduPilot and PX4 — your job is to configure it correctly and <em>test it</em> before you trust the cellular link.</p>
+<p>Think of it as layered tripwires. Any one of them triggers the aircraft to bring itself home:</p>
+<ul>
+<li><strong>RC (radio) link loss</strong> &#8594; RTH. Your hands-on ELRS link is the primary safety net.</li>
+<li><strong>Ground-station / cellular link loss</strong> &#8594; RTH (or finish the mission, then RTH). This is the one that covers a dropped SIM connection.</li>
+<li><strong>Low battery</strong> &#8594; RTH, then auto-land before the pack is empty.</li>
+<li><strong>Geofence breach</strong> &#8594; RTH if it strays past a distance or altitude you set.</li>
+<li><strong>GPS / EKF failure</strong> &#8594; the one case RTH can't help (it needs position), so it fails over to a controlled land-in-place.</li>
+</ul>
+<div class="callout danger"><span class="l">Home is set at arming, with a real GPS lock</span>
+RTH flies back to wherever the drone was <strong>armed</strong>, that is "home". Never arm without a solid 3D GPS fix, or "home" will be wrong and the aircraft will fly back to the wrong place. And set the return altitude <strong>above every obstacle</strong> between you and home (trees, buildings); a drone that climbs to 30 m before returning clears them, one set to 10 m might not.</div>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">ArduPilot failsafe params (set in Mission Planner, then test)</span></div>
+<pre><span class="pr">#</span> <span class="cmd">RC link loss -&gt; RTL</span>
+FS_THR_ENABLE   <span class="ok">1</span>      <span class="cmt"># enable radio failsafe, action = RTL</span>
+<span class="pr">#</span> <span class="cmd">ground-station / cellular link loss -&gt; RTL</span>
+FS_GCS_ENABLE   <span class="ok">1</span>      <span class="cmt"># RTL if MAVLink (the SIM link) goes quiet</span>
+FS_OPTIONS      <span class="ok">0</span>      <span class="cmt"># continue-or-RTL behavior; 0 = always RTL</span>
+<span class="pr">#</span> <span class="cmd">how RTH behaves</span>
+RTL_ALT         <span class="warn">3000</span>   <span class="cmt"># climb to 30 m (cm) before flying home — clear obstacles</span>
+RTL_LOIT_TIME   <span class="ok">5000</span>   <span class="cmt"># hover 5 s over home, then descend</span>
+<span class="pr">#</span> <span class="cmd">battery failsafe -&gt; RTL then LAND</span>
+BATT_LOW_VOLT   <span class="warn">14.0</span>   <span class="cmt"># 4S: start coming home at 3.5 V/cell</span>
+BATT_FS_LOW_ACT <span class="ok">2</span>      <span class="cmt"># 2 = RTL</span>
+<span class="pr">#</span> <span class="cmd">geofence -&gt; RTL on breach</span>
+FENCE_ENABLE    <span class="ok">1</span>
+FENCE_ACTION    <span class="ok">1</span>      <span class="cmt"># 1 = RTL</span>
+FENCE_RADIUS    <span class="warn">300</span>    <span class="cmt"># meters from home</span>
+FENCE_ALT_MAX   <span class="warn">120</span>    <span class="cmt"># meters (stay under legal ceiling)</span></pre></div>
+<p>Prove it works before you rely on it. On the bench (props off) power down your transmitter and watch the flight controller flip to RTL in the logs. Then, in open legal airspace, fly out a short distance and <strong>deliberately</strong> kill the cellular link (airplane-mode the modem) and confirm the aircraft turns, climbs to <span class="mono">RTL_ALT</span>, and comes home on its own. A failsafe you have never tested is not a failsafe.</p>
+<div class="callout"><span class="l i">Belt and suspenders on the Pi</span>
+The flight controller's RTH is your hard guarantee, it works even if the Raspberry Pi is dead. But add a soft layer too: have the companion code treat "no command from the laptop for N seconds" as a trigger to command RTL itself, and have the optional Claude agent default to <span class="mono">"return"</span> whenever telemetry stops arriving. Three independent things all saying "come home" is how you never lose an aircraft to a dropped signal.</div>
 </section>
 
 <section id="ai"><span class="h2num">// 08</span>
