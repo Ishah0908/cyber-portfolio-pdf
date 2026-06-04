@@ -70,9 +70,15 @@
     }
     @keyframes terminalShake {
       0% { transform: translate3d(0, 0, 0) scale(var(--zoom, 1)); }
-      25% { transform: translate3d(-1px, 1px, 0) scale(calc(var(--zoom, 1) * 1.01)); }
-      50% { transform: translate3d(1px, -1px, 0) scale(calc(var(--zoom, 1) * 0.995)); }
-      75% { transform: translate3d(-1px, 0, 0) scale(calc(var(--zoom, 1) * 1.015)); }
+      10% { transform: translate3d(-3px, 2px, 0) scale(calc(var(--zoom, 1) * 1.08)); }
+      20% { transform: translate3d(3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.05)); }
+      30% { transform: translate3d(-2px, 3px, 0) scale(calc(var(--zoom, 1) * 1.12)); }
+      40% { transform: translate3d(4px, -2px, 0) scale(calc(var(--zoom, 1) * 1.06)); }
+      50% { transform: translate3d(-3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.15)); }
+      60% { transform: translate3d(2px, 4px, 0) scale(calc(var(--zoom, 1) * 1.08)); }
+      70% { transform: translate3d(-4px, 2px, 0) scale(calc(var(--zoom, 1) * 1.10)); }
+      80% { transform: translate3d(3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.07)); }
+      90% { transform: translate3d(-2px, 2px, 0) scale(calc(var(--zoom, 1) * 1.09)); }
       100% { transform: translate3d(1px, 1px, 0) scale(var(--zoom, 1)); }
     }
 
@@ -838,31 +844,53 @@
     let dragStartY = 0;
     let dragStartProgress = 0;
     const codeLines = [
-      "falco -c /etc/falco/falco.yaml",
-      "tetragon run --config tetragon.yaml",
-      "cilium monitor --type drop",
-      "kubectl get ciliumendpoints -A",
-      "crowdsec-cli alerts list -a",
-      "wazuh-logtest -v",
-      "osqueryi SELECT name,pid,path FROM processes",
-      "yara -r rules/memory-threats.yar /proc",
-      "suricata -T -c /etc/suricata/suricata.yaml",
-      "zeek -i eth0 local",
-      "trivy image --scanners vuln,secret app",
-      "grype registry:app:latest --scope all-layers",
-      "syft packages dir:. -o cyclonedx-json",
-      "cosign verify --certificate-identity-regexp .* image",
-      "semgrep --config p/security-audit src/",
-      "gitleaks detect --source . --redact",
-      "kubectl get networkpolicy -A",
-      "kubectl auth can-i --list",
-      "terraform validate && tfsec .",
-      "gcloud projects get-iam-policy PROJECT_ID",
-      "aws iam get-account-summary",
-      "az role assignment list --all",
-      "openssl s_client -connect app.example.com:443",
-      "nmap -sV --script vuln target",
-      "tcpdump -ni any port 443"
+      "// DETECTION & MONITORING",
+      "falco -c /etc/falco/falco.yaml --cri /run/crio/crio.sock",
+      "tetragon run --config tetragon.yaml --export-filename=events.json",
+      "cilium monitor --type drop --related-to pod=default/web-*",
+      "kubectl get ciliumnetworkpolicies -A -o wide",
+      "wazuh-logtest -v /var/ossec/etc/rules/local_rules.xml",
+      "zeek -i eth0 local policy-dir=/opt/zeek/share/zeek/policy",
+      "suricata -T -c /etc/suricata/suricata.yaml -v",
+      "crowdsec-cli lapi status",
+      "",
+      "// VULNERABILITY & COMPLIANCE",
+      "trivy image --severity CRITICAL,HIGH nginx:latest",
+      "grype registry:ghcr.io/project:latest --scope all-layers",
+      "semgrep --config p/owasp-top-ten src/ --json",
+      "gitleaks detect --source . --verbose --redact",
+      "syft packages app:latest -o spdx-json > sbom.json",
+      "cosign verify-blob --signature sig app.tar.gz",
+      "",
+      "// INFRASTRUCTURE & IAM",
+      "terraform validate && tfsec . --minimum-severity MEDIUM",
+      "aws iam get-account-summary --query 'SummaryMap'",
+      "gcloud projects get-iam-policy PROJECT --format=json",
+      "az role assignment list --all --include-inherited",
+      "kubectl auth can-i list secrets --as=system:serviceaccount:default:app",
+      "",
+      "// SECURITY TESTING (AUTHORIZED ONLY)",
+      "nmap -sV --script vuln,exploit -p- target.internal",
+      "sqlmap -u 'http://target/login' --data='user=*&pass=*' -p user",
+      "metasploit-framework // msfconsole -r exploit.rc",
+      "burpsuite --config-file=burp_config.json --project-file=app.burp",
+      "hashcat -m 0 -a 3 hashes.txt -o cracked.txt ?a?a?a?a",
+      "john --wordlist=rockyou.txt --format=sha512crypt hashes",
+      "wireshark -i eth0 -f 'tcp.port == 443' -w capture.pcapng",
+      "aircrack-ng -w wordlist.txt -b AA:BB:CC:DD:EE:FF capture.cap",
+      "",
+      "// INCIDENT RESPONSE",
+      "osqueryi \"SELECT * FROM process WHERE name='suspicious';\"",
+      "yara -r -s rules/ /var/log/ /var/spool/",
+      "volatility -f memory.dump --profile=Win10x64 pslist",
+      "strings sample.exe | grep -i 'http\\|cmd\\|powershell'",
+      "tcpdump -i any -w incident.pcap 'host attacker.ip'",
+      "",
+      "// SECURE DEVELOPMENT",
+      "checksec --file=/bin/app",
+      "objdump -M intel -d app | grep -E 'jmp|call|ret'",
+      "strace -e trace=file,network -o strace.log ./app",
+      "python -m py_compile *.py --verify // AST verification"
     ];
 
     function buildBackdrop() {
@@ -896,11 +924,8 @@
           index++;
           setTimeout(typeCharacter, typingSpeed);
         } else {
-          setTimeout(() => {
-            element.textContent = "";
-            index = 0;
-            typeCharacter();
-          }, cycleDelay);
+          // Keep the full text visible, don't clear
+          element.textContent = text;
         }
       }
 
@@ -925,13 +950,12 @@
         backdrop.style.transform = `translateY(${scrollOffset}px)`;
       }
 
-      if (progress > 0.9) {
+      if (progress > 0.75) {
         backdrop.classList.add("terminal");
+        const terminalIntensity = Math.min(2, 1 + (progress - 0.75) * 4);
+        backdrop.style.filter = `contrast(${(1.45 * terminalIntensity).toFixed(2)}) saturate(${(1.3 * terminalIntensity).toFixed(2)}) blur(${(0.4 * (progress - 0.75)).toFixed(2)}px)`;
       } else {
         backdrop.classList.remove("terminal");
-      }
-
-      if (progress <= 0.9) {
         backdrop.style.filter = "none";
       }
     }
