@@ -246,8 +246,17 @@ Hand-rolled firmware is the best way to <em>learn</em> and the worst way to <em>
 </tfoot>
 </table></div>
 
-<div class="callout war"><span class="l">Budget reality</span>
-Plan for <strong>~$700–$900 from zero to flying</strong> once you add a soldering iron, shipping, and the parts you will inevitably re-order after the first crash, plus ~$10/month for the SIM. You can shave it to ~$450 with a smaller frame, no separate radio, and a Pi Zero 2 W, or push past $1,500 with a better camera, RTK GPS, and a long-range LTE antenna. Start mid-range; you will learn what to upgrade.</div>
+<div class="callout"><span class="l i">You do not need to spend this much to start</span>
+That table is the <em>full</em> capable build, cellular, AI-ready, with a backup radio. <strong>You can learn to fly for far less.</strong> A tiny "whoop"-style trainer with a microcontroller flight controller, a small frame, and no cellular or AI runs <strong>~$120–$200</strong>, and it teaches you 80% of what matters. Start there, then add the Raspberry Pi, the LTE modem, and the Claude brain later, one paycheck at a time. The expensive parts (separate radio, cellular, spare batteries) are <strong>upgrades, not requirements</strong>.</div>
+<div class="tbl"><table>
+<thead><tr><th>If your budget is...</th><th>Build this</th><th>~Cost</th></tr></thead>
+<tbody>
+<tr><td>Tight / just learning</td><td>Small frame + Pico-class FC, no cellular/AI</td><td class="n">$120–$200</td></tr>
+<tr><td>Comfortable</td><td>The full handbook build (Pi + LTE + AI-ready)</td><td class="n">~$780</td></tr>
+<tr><td>No limits</td><td>+ RTK GPS, HD camera, long-range antenna, spares</td><td class="n">$1,500+</td></tr>
+</tbody>
+</table></div>
+<p>So when the parts list looks like a lot, remember: it is a <em>menu</em>, not a bill. Buy the airframe and a cheap flight controller first, get something hovering, and let the build pay for itself in skills before you add the expensive, clever parts.</p>
 </section>
 
 <section id="tools"><span class="h2num">// 04</span>
@@ -284,11 +293,6 @@ Charge nothing and connect no battery until the very end of assembly. Most magic
 
 <h3>1. Frame and motors</h3>
 <p>Assemble the frame. Mount the four motors on the arms and route their three wires toward the center. Note motor spin directions, the build instructions or your flight-controller software will tell you which two must spin reversed. Leave wires slightly long; you trim on final solder.</p>
-
-<figure>
-  <div class="shot">// DROP YOUR OWN PHOTO HERE &mdash; <span>frame + four motors mounted, wires routed to center</span><br>replace this block with: &lt;img src="assets/drone/01-frame.jpg" alt="frame and motors"&gt;</div>
-  <figcaption>FIG.A: Your airframe at stage 1. Real photos of your own build make this handbook yours, swap each placeholder for a shot from your bench.</figcaption>
-</figure>
 
 <h3>2. ESC, power distribution, and soldering</h3>
 <p>Solder the four motor triples to the 4-in-1 ESC. Solder the XT60 battery lead and the ESC's power pads, observing polarity, reversing this is the classic "magic smoke" mistake. Add a BEC if your Pi/peripherals need a clean 5V rail separate from the flight controller.</p>
@@ -418,11 +422,6 @@ Never let the model command throttle or attitude directly, and never trust it as
 <li>Cellular link comes up on boot and the laptop GCS shows live telemetry.</li>
 <li>Low-battery and link-loss failsafes are configured and tested.</li>
 </ul>
-<figure>
-  <div class="shot">// DROP YOUR OWN PHOTO HERE &mdash; <span>the finished aircraft, ready for its first hover</span><br>replace this block with: &lt;img src="assets/drone/finished.jpg" alt="finished drone"&gt;</div>
-  <figcaption>FIG.B: The payoff shot. Nothing sells a build guide like a photo of the real thing you made flying.</figcaption>
-</figure>
-
 <h4>First hover</h4>
 <ul>
 <li>Props on, open area, away from people, legal airspace, full battery.</li>
