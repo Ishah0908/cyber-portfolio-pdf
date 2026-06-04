@@ -346,7 +346,6 @@
   <nav class="top-nav" aria-label="Primary">
     <a href="index.html">Portfolio</a>
     <a href="blog/">Blog</a>
-    <a href="mailto:superman090810@gmail.com">Contact</a>
   </nav>
 
   <div class="content-shell">
@@ -358,20 +357,9 @@
     <header>
       <div>
         <h1>IBRAHIM <span class="accent">SULTAN</span></h1>
-        <p class="sub">&gt; CYBERSECURITY ENGINEER · CLEARANCE: ADMIN</p>
+        <p class="sub">&gt; CYBERSECURITY PROFESSIONAL</p>
       </div>
     </header>
-
-    <section class="intro">
-      <p>
-        Ibrahim Sultan is a cybersecurity engineer with nearly a decade of hands-on experience in security operations,
-        architecture, cloud defense, and identity governance across enterprise environments.
-      </p>
-      <div class="intro-actions">
-        <a class="btn" href="blog/">Open Public Blog</a>
-        <a class="btn" href="blog/handbooks/">Open Handbook Library</a>
-      </div>
-    </section>
 
     <section class="about" aria-label="About Ibrahim Sultan">
       <article class="about-card">
@@ -407,6 +395,10 @@
           <span class="chip">Cloud & Identity Security</span>
           <span class="chip">Threat Detection</span>
           <span class="chip">Drone & Robotics Builder</span>
+        </div>
+        <div class="intro-actions">
+          <a class="btn" href="blog/">Open Public Blog</a>
+          <a class="btn" href="blog/handbooks/">Open Handbook Library</a>
         </div>
       </article>
       <article class="about-card">
@@ -471,31 +463,31 @@
   <script>
     const backdrop = document.getElementById("codeBackdrop");
     const codeLines = [
-      "ufw default deny incoming",
-      "ufw allow 22/tcp",
-      "fail2ban-client status sshd",
-      "ss -tulpen | grep LISTEN",
-      "auditctl -l",
-      "ausearch -m USER_LOGIN -ts today",
-      "osqueryi SELECT pid,name FROM processes",
-      "yara -r rules/malware.yar /opt/uploads",
+      "falco -c /etc/falco/falco.yaml",
+      "tetragon run --config tetragon.yaml",
+      "cilium monitor --type drop",
+      "kubectl get ciliumendpoints -A",
+      "crowdsec-cli alerts list -a",
+      "wazuh-logtest -v",
+      "osqueryi SELECT name,pid,path FROM processes",
+      "yara -r rules/memory-threats.yar /proc",
       "suricata -T -c /etc/suricata/suricata.yaml",
       "zeek -i eth0 local",
-      "trivy image --severity HIGH,CRITICAL app",
-      "semgrep --config auto src/",
-      "cosign verify --key cosign.pub image",
+      "trivy image --scanners vuln,secret app",
+      "grype registry:app:latest --scope all-layers",
+      "syft packages dir:. -o cyclonedx-json",
+      "cosign verify --certificate-identity-regexp .* image",
+      "semgrep --config p/security-audit src/",
+      "gitleaks detect --source . --redact",
       "kubectl get networkpolicy -A",
       "kubectl auth can-i --list",
+      "terraform validate && tfsec .",
       "gcloud projects get-iam-policy PROJECT_ID",
-      "jq '.bindings[] | .role' iam-policy.json",
+      "aws iam get-account-summary",
+      "az role assignment list --all",
       "openssl s_client -connect app.example.com:443",
       "nmap -sV --script vuln target",
-      "tcpdump -ni any port 443",
-      "curl -I --tlsv1.3 https://app.example.com",
-      "dig +dnssec app.example.com",
-      "pip list --outdated",
-      "npm audit --omit=dev",
-      "terraform validate && terraform plan"
+      "tcpdump -ni any port 443"
     ];
 
     function buildBackdrop() {
