@@ -332,6 +332,15 @@ FC GND        <span class="ok">&#8212;</span>  Pi GND
 <span class="out">[5/5] installing optional AI agent (anthropic) ........</span>
 <span class="ok">&#10003; companion stack installed — `sudo reboot` to start services</span></pre></div>
 <p>The repo is the deliverable you hand to anyone building this: it wires the serial link to the flight controller, brings up the cellular connection on boot, starts a video stream, and exposes everything to your laptop. The README documents every service and a <span class="mono">config.yml</span> for your serial port, baud, camera, and SIM APN.</p>
+<p>Crucially, <strong>it does not reinvent the wheel, it stands on proven open-source drone projects.</strong> The installer clones and pins known-good versions of the established tools, so you are building on code that thousands of aircraft already fly:</p>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">install.sh clones the projects this build relies on</span></div>
+<pre><span class="cmt"># proven autopilot + ground/companion tooling, pinned to known-good tags</span>
+<span class="pr">$</span> <span class="cmd">git clone https://github.com/ArduPilot/ardupilot.git</span>        <span class="cmt"># autopilot firmware</span>
+<span class="pr">$</span> <span class="cmd">git clone https://github.com/ArduPilot/pymavlink.git</span>        <span class="cmt"># MAVLink in Python</span>
+<span class="pr">$</span> <span class="cmd">git clone https://github.com/ArduPilot/MAVProxy.git</span>         <span class="cmt"># ground station / link</span>
+<span class="pr">$</span> <span class="cmd">git clone https://github.com/mavlink/mavlink-router.git</span>     <span class="cmt"># route telemetry over LTE</span>
+<span class="ok">&#10003; dependencies cloned + pinned — your config.yml wires them together</span></pre></div>
+<p>Your fork's job is the <em>glue</em>: a small service that bridges the flight controller's serial port to these tools, manages the LTE connection, runs the video pipeline, and (optionally) calls the Claude agent. You write maybe a few hundred lines; the heavy lifting is borrowed from projects that have been flying for a decade. If you want to learn the fundamentals, the microcontroller path in section 02 (a Pico-style controller you write yourself) is the opposite trade, and both belong in a serious builder's toolkit.</p>
 <div class="callout"><span class="l i">Why a repo, not a tarball</span>
 Hardware drifts, ports change, modems differ. A repo lets the install script detect your Pi model and modem, pin known-good library versions, and lets you <span class="mono">git pull</span> fixes after a firmware bump, without re-doing the whole setup. Fork it and make it yours.</div>
 </section>

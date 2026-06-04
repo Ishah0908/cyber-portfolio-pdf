@@ -764,6 +764,50 @@
       padding: 16px;
       box-shadow: 0 0 16px rgba(55, 212, 255, 0.2), inset 0 0 10px rgba(55, 212, 255, 0.08);
     }
+    .fun-head {
+      max-width: 1100px;
+      margin: 26px auto 0;
+      padding: 0 16px;
+      text-align: center;
+    }
+    .fun-head .k {
+      color: var(--gold);
+      font-size: 0.74rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .fun-head h2 {
+      margin-top: 0.3rem;
+      font-family: "Orbitron", sans-serif;
+      color: #dff6ff;
+      font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+      letter-spacing: 0.06em;
+    }
+    .fun-head p {
+      margin: 0.5rem auto 0;
+      max-width: 60ch;
+      color: #9fdff4;
+      font-size: 0.9rem;
+    }
+    a.hub-card { text-decoration: none; display: block; transition: transform .2s, box-shadow .2s, border-color .2s; }
+    a.hub-card:hover { transform: translateY(-4px); border-color: rgba(55,212,255,0.95); box-shadow: 0 0 30px rgba(55,212,255,0.32), inset 0 0 12px rgba(55,212,255,0.1); }
+    .hub-card.feat {
+      grid-column: 1 / -1;
+      background: linear-gradient(110deg, rgba(58,215,255,0.16), var(--glass));
+      border-color: rgba(255, 182, 72, 0.5);
+    }
+    .hub-card.feat .hub-title { font-size: 1.3rem; }
+    .hub-tag {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: "Share Tech Mono", monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      border: 1px solid rgba(255, 182, 72, 0.4);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
     .hub-kicker {
       color: var(--gold);
       font-size: 0.73rem;
@@ -884,6 +928,27 @@
         <p class="sub">&gt; CYBERSECURITY PROFESSIONAL</p>
       </div>
     </header>
+
+    <div class="fun-head">
+      <span class="k">// Fun Projects</span>
+      <h2>Things I Build for Fun</h2>
+      <p>Hands-on hardware and autonomous-systems builds, documented end to end so anyone can follow along.</p>
+    </div>
+    <section class="hub" aria-label="Fun Projects">
+      <a class="hub-card feat" href="blog/handbooks/08-drone-build.html" target="_blank" rel="noopener">
+        <div class="hub-kicker">Build Handbook</div>
+        <h2 class="hub-title">Build a Cellular, Pi-Powered Drone You Fly From a Laptop</h2>
+        <p class="hub-desc">From an empty bench to a flying machine you command from anywhere over a SIM card: full parts list with real costs, wiring and assembly, a GitHub repo with a one-line install, the cellular link, and an optional Claude AI brain. Pixhawk or Raspberry Pi flight-HAT.</p>
+        <span class="hub-tag">RASPBERRY PI · LTE/SIM · ARDUPILOT · CLAUDE API</span>
+        <div class="hub-actions"><span class="btn">Open Handbook →</span></div>
+      </a>
+      <article class="hub-card">
+        <div class="hub-kicker">In Development</div>
+        <h2 class="hub-title">AI-Powered Drone &amp; Vehicle Control</h2>
+        <p class="hub-desc">Autonomous systems integration: AI-controlled drones and vehicles with remote laptop operation, real-time live traffic feed, and intelligent route optimization powered by machine learning.</p>
+        <div class="hub-actions"><span class="btn" style="opacity:0.6;cursor:not-allowed">In Development</span></div>
+      </article>
+    </section>
 
     <section class="about" aria-label="About Ibrahim Sultan">
       <article class="about-card">
@@ -1049,14 +1114,6 @@
         <p class="hub-desc">Public posts, tactical implementation notes, and practical detection and hardening walkthroughs.</p>
         <div class="hub-actions">
           <a class="btn" href="blog/" target="_blank" rel="noopener">Open</a>
-        </div>
-      </article>
-      <article class="hub-card">
-        <div class="hub-kicker">Projects</div>
-        <h2 class="hub-title">AI-Powered Drone & Vehicle Control</h2>
-        <p class="hub-desc">Autonomous systems integration: AI-controlled drones and vehicles with remote laptop operation, real-time live traffic feed, and intelligent route optimization powered by machine learning.</p>
-        <div class="hub-actions">
-          <span class="btn" style="opacity:0.6;cursor:not-allowed">In Development</span>
         </div>
       </article>
     </section>
