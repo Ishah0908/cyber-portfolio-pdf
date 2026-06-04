@@ -37,8 +37,8 @@
       bottom: 0;
       z-index: 0;
       pointer-events: none;
-      opacity: 0.2;
-      overflow: hidden;
+      opacity: 0.25;
+      overflow: visible;
       transform-origin: center center;
       transition: transform 120ms linear, opacity 120ms linear, filter 120ms linear;
       will-change: transform, filter, opacity;
@@ -59,10 +59,11 @@
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       overflow: visible;
-      text-shadow: 0 0 9px rgba(55, 212, 255, 0.35);
+      text-shadow: 0 0 12px rgba(55, 212, 255, 0.5);
       user-select: none;
-      opacity: 0.78;
+      opacity: 0.85;
       min-height: 400vh;
+      z-index: 1;
     }
     @keyframes codefall {
       from { transform: translateY(0); }
@@ -292,7 +293,7 @@
     .tunnel-viewport {
       position: relative;
       height: auto;
-      padding: 30px 20px;
+      padding: 20px 15px;
       overflow: visible;
     }
     .tunnel-stage {
@@ -300,9 +301,9 @@
       width: 100%;
       height: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      max-width: 1000px;
       margin: 0 auto;
     }
     .tunnel-hud {
