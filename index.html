@@ -31,7 +31,10 @@
 
     .code-backdrop {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 0;
       pointer-events: none;
       opacity: 0.2;
@@ -39,6 +42,7 @@
       transform-origin: center center;
       transition: transform 120ms linear, opacity 120ms linear, filter 120ms linear;
       will-change: transform, filter, opacity;
+      min-height: 100vh;
     }
     .code-backdrop.terminal {
       filter: contrast(1.45) saturate(1.3) blur(0.4px);
@@ -284,7 +288,6 @@
       height: auto;
       padding: 40px 20px;
       overflow: visible;
-      touch-action: auto;
     }
     .tunnel-stage {
       position: relative;
@@ -399,21 +402,28 @@
       font-size: 0.62rem;
     }
     .tunnel-label {
-      right: 14px;
-      left: 14px;
-      bottom: 13px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: #e2f8ff;
-      font-size: 0.65rem;
+      position: absolute;
+      right: 12px;
+      left: 12px;
+      bottom: 12px;
+      display: block;
+      color: #d4f1ff;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.08em;
-      text-shadow: 0 0 8px rgba(55, 212, 255, 0.42);
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 8px rgba(55, 212, 255, 0.4);
+      line-height: 1.3;
     }
-    .tunnel-label span:last-child {
-      color: rgba(255, 182, 72, 0.94);
-      text-shadow: 0 0 6px rgba(255, 182, 72, 0.36);
+    .tunnel-label .title {
+      display: block;
+      color: #e8f9ff;
+    }
+    .tunnel-label .subtitle {
+      display: block;
+      color: rgba(255, 182, 72, 0.9);
+      font-size: 0.65rem;
+      margin-top: 2px;
+      text-shadow: 0 0 6px rgba(255, 182, 72, 0.3);
     }
     .tunnel-action {
       right: 14px;
@@ -704,53 +714,53 @@
             <span>Wheel / Drag <strong>Navigate</strong></span>
           </div>
           <div class="tunnel-stage" id="tunnelStage">
-            <button class="tunnel-card" type="button" data-title="Me and Abdullah - My Heart, My Strength" data-frame="Frame 01" data-image="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" aria-label="Open Me and Abdullah image">
+            <button class="tunnel-card" type="button" data-title="Ibrahim Sultan - Me in My Childhood" data-frame="Frame 01" data-image="assets/photos/IMG_3671.JPG" aria-label="Open Ibrahim childhood image">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 01</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" alt="Ibrahim with Abdullah" />
-              <span class="tunnel-label"><span>Me and Abdullah</span><span>Heartline</span></span>
+              <img src="assets/photos/IMG_3671.JPG" alt="Ibrahim Sultan childhood photo" />
+              <span class="tunnel-label"><span class="title">Childhood Archive</span><span class="subtitle">Origin Node</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="Mustafa Shah - My Little Sweetheart" data-frame="Frame 02" data-image="assets/photos/IMG_6498_2.jpg" aria-label="Open Mustafa Shah portrait">
+            <button class="tunnel-card" type="button" data-title="At Citi" data-frame="Frame 02" data-image="assets/photos/IMG_3807.jpg" aria-label="Open Citi photo">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 02</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_6498_2.jpg" alt="Mustafa Shah portrait" />
-              <span class="tunnel-label"><span>Mustafa Shah</span><span>Signal Child</span></span>
+              <img src="assets/photos/IMG_3807.jpg" alt="Professional photo at Citi" />
+              <span class="tunnel-label"><span class="title">At Citi</span><span class="subtitle">Mission Desk</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="Abdullah and Mustafa" data-frame="Frame 03" data-image="assets/photos/IMG_6468.JPG" aria-label="Open Abdullah and Mustafa together">
+            <button class="tunnel-card" type="button" data-title="At Charles Schwab" data-frame="Frame 03" data-image="assets/photos/IMG_1108.jpg" aria-label="Open Charles Schwab photo">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 03</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_6468.JPG" alt="Abdullah and Mustafa together" />
-              <span class="tunnel-label"><span>Abdullah and Mustafa</span><span>Dual Orbit</span></span>
+              <img src="assets/photos/IMG_1108.jpg" alt="Professional photo at Charles Schwab" />
+              <span class="tunnel-label"><span class="title">At Charles Schwab</span><span class="subtitle">Blue Shift</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="Ibrahim Sultan - Me in My Childhood" data-frame="Frame 04" data-image="assets/photos/IMG_3671.JPG" aria-label="Open Ibrahim childhood image">
+            <button class="tunnel-card" type="button" data-title="Road Trip" data-frame="Frame 04" data-image="assets/photos/IMG_0717.jpg" aria-label="Open road trip image">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 04</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_3671.JPG" alt="Ibrahim Sultan childhood photo" />
-              <span class="tunnel-label"><span>Childhood Archive</span><span>Origin Node</span></span>
+              <img src="assets/photos/IMG_0717.jpg" alt="Road trip photo" />
+              <span class="tunnel-label"><span class="title">Road Trip</span><span class="subtitle">Transit Memory</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="My Boys, My Greatest Blessing" data-frame="Frame 05" data-image="assets/photos/IMG_3675.jpg" aria-label="Open boys moment image">
+            <button class="tunnel-card" type="button" data-title="Me and Abdullah - My Heart, My Strength" data-frame="Frame 05" data-image="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" aria-label="Open Me and Abdullah image">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 05</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_3675.jpg" alt="Mustafa and Abdullah moment" />
-              <span class="tunnel-label"><span>Greatest Blessing</span><span>Family Core</span></span>
+              <img src="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" alt="Ibrahim with Abdullah" />
+              <span class="tunnel-label"><span class="title">Me and Abdullah</span><span class="subtitle">My Heart, My Strength</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="At Citi" data-frame="Frame 06" data-image="assets/photos/IMG_3807.jpg" aria-label="Open Citi photo">
+            <button class="tunnel-card" type="button" data-title="Mustafa Shah - My Little Sweetheart" data-frame="Frame 06" data-image="assets/photos/IMG_6498_2.jpg" aria-label="Open Mustafa Shah portrait">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 06</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_3807.jpg" alt="Professional photo at Citi" />
-              <span class="tunnel-label"><span>At Citi</span><span>Mission Desk</span></span>
+              <img src="assets/photos/IMG_6498_2.jpg" alt="Mustafa Shah portrait" />
+              <span class="tunnel-label"><span class="title">Mustafa Shah</span><span class="subtitle">My Little Sweetheart</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="At Charles Schwab" data-frame="Frame 07" data-image="assets/photos/IMG_1108.jpg" aria-label="Open Charles Schwab photo">
+            <button class="tunnel-card" type="button" data-title="Abdullah and Mustafa" data-frame="Frame 07" data-image="assets/photos/IMG_6468.JPG" aria-label="Open Abdullah and Mustafa together">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 07</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_1108.jpg" alt="Professional photo at Charles Schwab" />
-              <span class="tunnel-label"><span>At Charles Schwab</span><span>Blue Shift</span></span>
+              <img src="assets/photos/IMG_6468.JPG" alt="Abdullah and Mustafa together" />
+              <span class="tunnel-label"><span class="title">Abdullah and Mustafa</span><span class="subtitle">My Twin Blessings</span></span>
             </button>
-            <button class="tunnel-card" type="button" data-title="Road Trip" data-frame="Frame 08" data-image="assets/photos/IMG_0717.jpg" aria-label="Open road trip image">
+            <button class="tunnel-card" type="button" data-title="My Boys, My Greatest Blessing" data-frame="Frame 08" data-image="assets/photos/IMG_3675.jpg" aria-label="Open boys moment image">
               <span class="frame-bracket tl"></span><span class="frame-bracket tr"></span><span class="frame-bracket bl"></span><span class="frame-bracket br"></span>
               <span class="tunnel-index">Frame 08</span><span class="tunnel-action">Enhance</span>
-              <img src="assets/photos/IMG_0717.jpg" alt="Road trip photo" />
-              <span class="tunnel-label"><span>Road Trip</span><span>Transit Memory</span></span>
+              <img src="assets/photos/IMG_3675.jpg" alt="Mustafa and Abdullah moment" />
+              <span class="tunnel-label"><span class="title">My Greatest Blessing</span><span class="subtitle">Family at Heart</span></span>
             </button>
           </div>
           <div class="tunnel-controls" aria-label="Tunnel navigation controls">
@@ -981,10 +991,9 @@
 
     if (tunnelViewport) {
       tunnelViewport.addEventListener("wheel", (event) => {
-        event.preventDefault();
         tunnelProgress = clamp(tunnelProgress + event.deltaY * 0.00075, 0, 1);
         updateTunnel();
-      }, { passive: false });
+      }, { passive: true });
 
       tunnelViewport.addEventListener("pointerdown", (event) => {
         dragActive = true;
