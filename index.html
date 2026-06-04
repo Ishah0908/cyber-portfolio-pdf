@@ -41,8 +41,10 @@
       z-index: 30;
       pointer-events: none;
       border-radius: 12px;
-      border: 1px solid rgba(55, 212, 255, 0.16);     /* faint always-on rail */
-      box-shadow: inset 0 0 22px rgba(55, 212, 255, 0.06);
+      /* brighter always-on rail so the COMPLETE frame is visible top-to-bottom
+         at every scroll position; the animated beam below just travels on top */
+      border: 1.5px solid rgba(55, 212, 255, 0.34);
+      box-shadow: inset 0 0 24px rgba(55, 212, 255, 0.08), 0 0 10px rgba(55, 212, 255, 0.12);
     }
     .power-frame::before {
       content: "";
@@ -198,11 +200,21 @@
       .power-frame::before, .power-frame::after, .power-bolt,
       .arc-reactor, .arc-reactor::before { animation: none; }
     }
-    /* on narrow screens content spans full width — hide the reactor + leads + dim the power-frame so nothing overlaps */
+    /* on narrow screens: hide the long energy leads (they streaked across content),
+       but KEEP the full bordering frame visible top-to-bottom and show a small
+       arc reactor tucked in the corner so the page still reads as "powered". */
     @media (max-width: 760px) {
-      .arc-reactor, .reactor-lead { display: none; }
-      .power-frame { opacity: 0.06; }
-      .power-frame::before, .power-frame::after { opacity: 0.15; }
+      .reactor-lead { display: none; }
+      .arc-reactor {
+        display: block;
+        width: 24px;
+        height: 24px;
+        bottom: 14px;
+        left: 14px;
+      }
+      .power-frame {
+        border-color: rgba(55, 212, 255, 0.42);   /* complete frame stays clearly visible */
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       .reactor-lead { animation: none; }
