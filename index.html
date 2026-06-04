@@ -198,9 +198,11 @@
       .power-frame::before, .power-frame::after, .power-bolt,
       .arc-reactor, .arc-reactor::before { animation: none; }
     }
-    /* on narrow screens content spans full width — hide the reactor + leads so nothing overlaps */
+    /* on narrow screens content spans full width — hide the reactor + leads + dim the power-frame so nothing overlaps */
     @media (max-width: 760px) {
       .arc-reactor, .reactor-lead { display: none; }
+      .power-frame { opacity: 0.06; }
+      .power-frame::before, .power-frame::after { opacity: 0.15; }
     }
     @media (prefers-reduced-motion: reduce) {
       .reactor-lead { animation: none; }
@@ -889,6 +891,7 @@
         min-width: 38px;
         min-height: 38px;
       }
+      .rotate-hint { display: none; }
       .enhance-panel {
         padding: 14px;
       }
@@ -933,9 +936,9 @@
 
     <section class="about" aria-label="About Ibrahim Sultan">
       <article class="about-card">
-        <h2 class="about-title">About Ibrahim Sultan</h2>
+        <h2 class="about-title">About</h2>
         <p class="about-copy">
-          I am Ibrahim Sultan. I hold a Masters in Computer Application and a Masters in Information Systems Security
+          I hold a Masters in Computer Application and a Masters in Information Systems Security
           from University of the Cumberlands. I have spent almost a decade in cybersecurity, building practical security
           programs that combine strong engineering with real-world operations.
         </p>
