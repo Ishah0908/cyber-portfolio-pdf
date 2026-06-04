@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Cellular, Pi-Powered Drone You Fly From a Laptop: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.78);--hud-faint:rgba(55,212,255,.18);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:rgba(12,24,36,.84);--ink:#dff4ff;--ink-dim:#9fc4d8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(900px 480px at 82% -5%,rgba(55,212,255,.17),transparent 58%),linear-gradient(180deg,#080f1c 0%,#050b14 55%,#03070e 100%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+  .backlink{position:fixed;top:14px;left:48px;z-index:62;font-family:'Share Tech Mono';font-size:12px;letter-spacing:1px;color:var(--hud-dim);text-decoration:none}
+  .backlink:hover{color:var(--hud)}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#dff6ff;text-shadow:0 0 18px rgba(55,212,255,.14)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:linear-gradient(180deg,rgba(12,24,36,.9),rgba(6,16,26,.88));border-radius:8px;box-shadow:0 16px 34px rgba(55,212,255,.08)}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#dff6ff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#dff6ff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:rgba(10,20,30,.9);
+    box-shadow:0 18px 34px -22px rgba(55,212,255,.45)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#02060d;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:linear-gradient(180deg,rgba(12,24,36,.92),rgba(10,20,30,.9));padding:24px 18px 14px;
+    box-shadow:0 18px 36px -24px rgba(55,212,255,.46)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#02060d;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  td.n{color:var(--gold);text-align:right;white-space:nowrap}
+  tfoot td{border-top:1px solid var(--hud-faint);color:#dff6ff}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+  /* svg diagram text + flow */
+  .nb{fill:rgba(10,22,34,.92);stroke:#37d4ff;stroke-width:1.3}
+  .nbg{fill:rgba(8,26,20,.9);stroke:#5ef38c;stroke-width:1.3}
+  .nbgold{fill:rgba(40,28,8,.9);stroke:#ffb648;stroke-width:1.3}
+  .nl{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#dff6ff}
+  .ns{font-family:'Share Tech Mono';font-size:9px;fill:#9fc4d8}
+  .nf{stroke:#37d4ff;stroke-width:1.5;fill:none;marker-end:url(#dar);animation:flowMarch .9s linear infinite;stroke-dasharray:7 6}
+  .nfb{stroke:#5ef38c;stroke-width:1.4;fill:none;marker-end:url(#dag);animation:flowMarch 1.1s linear infinite;stroke-dasharray:6 6}
+  .nt{font-family:'Share Tech Mono';font-size:9px;letter-spacing:1px}
+@keyframes flowMarch{to{stroke-dashoffset:-13}}</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Autonomous Systems</span>
+  <h1>Build a <span class="c">Cellular, Pi-Powered Drone</span> You Fly From a Laptop</h1>
+  <p class="standfirst">From an empty bench to a flying machine you can command from anywhere over a SIM card: the full parts list with real costs, the wiring, the software (a GitHub repo with a one-line install), the cellular link, and an optional Claude AI brain. Built to be understood and actually built, not admired on a slide.</p>
+  <div class="byline"><span class="dot"></span><span>AUTONOMOUS SYSTEMS BUILD</span><span>// ~18 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<div class="callout danger"><span class="l">Fly legal, fly safe</span>
+This is an educational build for lawful hobby and research use. In the US, register with the FAA, fly under Part 107 or the recreational exception, keep visual line of sight, broadcast <strong>Remote ID</strong>, stay clear of airports and people, and check local law before any beyond-line-of-sight or autonomous flight. Never weaponize a drone or use it to surveil people. Cellular control does not exempt you from line-of-sight rules. When in doubt, don't fly.</div>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#what">What you are building</a></li>
+<li><a href="#arch">System architecture</a></li>
+<li><a href="#bom">Bill of materials &amp; cost</a></li>
+<li><a href="#tools">Tools &amp; workspace</a></li>
+<li><a href="#assemble">Assembly, step by step</a></li>
+<li><a href="#software">Flashing &amp; software install</a></li>
+<li><a href="#cellular">The cellular link &amp; laptop control</a></li>
+<li><a href="#ai">Adding a Claude AI brain</a></li>
+<li><a href="#preflight">Pre-flight, testing &amp; first flight</a></li>
+<li><a href="#cost">Total cost &amp; where to go next</a></li>
+</ol></nav>
+
+<section id="what"><span class="h2num">// 01</span>
+<h2>What you are building</h2>
+<p>Most "drone build" guides stop at a radio controller and line-of-sight flying. This one goes further: a quadcopter with two brains. A <strong>flight controller</strong> handles the fast, life-or-death loop, keeping the aircraft stable. A <strong>Raspberry Pi companion computer</strong> rides along for everything smart, and a <strong>4G/LTE modem with a SIM card</strong> gives the whole thing an internet connection in the air. The result is a drone you can command, monitor, and stream video from using a laptop anywhere with a signal, and that can optionally make its own decisions through the <strong>Claude AI API</strong>.</p>
+<p>The split matters. You never want a cloud round-trip or a Python script in the loop that keeps the props spinning, that is the flight controller's job and it must work even if everything else dies. The Pi and the cellular link sit <em>on top</em>, sending high-level commands ("go to this waypoint", "hold", "return home") and pulling back telemetry and video. If the Pi crashes, the aircraft still flies and fails safe.</p>
+<div class="callout"><span class="l i">The mental model</span>
+Flight controller = reflexes (milliseconds, never offloaded). Raspberry Pi = the brain (seconds, does the thinking). Cellular link = the nervous system to your laptop. Claude API = optional judgment for autonomy. Keep those four roles separate in your head and every wiring and software decision below makes sense.</div>
+
+<h3>Capabilities when you are done</h3>
+<ul>
+<li>Fly and monitor from a laptop <strong>ground control station</strong> over LTE, far past radio range.</li>
+<li>Live <strong>video + telemetry</strong> (battery, GPS, attitude, signal) streamed back over cellular.</li>
+<li><strong>GPS waypoint missions</strong>, position hold, and automatic return-to-home failsafe.</li>
+<li>Optional <strong>autonomy</strong>: feed telemetry and camera frames to Claude and let it propose actions inside hard safety limits.</li>
+</ul>
+</section>
+
+<section id="arch"><span class="h2num">// 02</span>
+<h2>System architecture</h2>
+<p>Here is the whole data path. Read it left to right for commands, and follow the green return path for telemetry and video coming back. The cellular link is the only wireless hop that matters for control; everything on the airframe is wired.</p>
+
+<figure><svg viewBox="0 0 820 250" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="dar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker>
+<marker id="dag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#5ef38c"/></marker>
+</defs>
+<rect class="nb" x="8"   y="40" width="150" height="64" rx="8"/><text class="nl" x="83"  y="68" text-anchor="middle">Laptop GCS</text><text class="ns" x="83"  y="86" text-anchor="middle">mission + video</text>
+<rect class="nbgold" x="190" y="40" width="150" height="64" rx="8"/><text class="nl" x="265" y="68" text-anchor="middle">Cellular</text><text class="ns" x="265" y="86" text-anchor="middle">4G/LTE + SIM</text>
+<rect class="nb" x="372" y="40" width="150" height="64" rx="8"/><text class="nl" x="447" y="68" text-anchor="middle">Raspberry Pi</text><text class="ns" x="447" y="86" text-anchor="middle">companion brain</text>
+<rect class="nb" x="554" y="40" width="150" height="64" rx="8"/><text class="nl" x="629" y="68" text-anchor="middle">Flight Ctrl</text><text class="ns" x="629" y="86" text-anchor="middle">ArduPilot/PX4</text>
+<rect class="nb" x="640" y="170" width="150" height="60" rx="8"/><text class="nl" x="715" y="196" text-anchor="middle">Motors</text><text class="ns" x="715" y="213" text-anchor="middle">4× ESC + props</text>
+<rect class="nbg" x="372" y="170" width="150" height="60" rx="8"/><text class="nl" x="447" y="196" text-anchor="middle">Camera</text><text class="ns" x="447" y="213" text-anchor="middle">video source</text>
+
+<!-- command path -->
+<path class="nf" d="M158,72 L188,72"/>
+<path class="nf" d="M340,72 L370,72"/>
+<path class="nf" d="M522,72 L552,72"/>
+<path class="nf" d="M629,104 L629,150 L715,150 L715,168"/>
+<!-- return path (telemetry/video) -->
+<path class="nfb" d="M447,168 L447,120 Q447,110 460,110 L470,110"/>
+<path class="nfb" d="M460,118 Q447,118 447,108 L447,106"/>
+<text class="nt" x="265" y="28" text-anchor="middle" fill="#37d4ff">COMMANDS  &#8594;</text>
+<text class="nt" x="455" y="248" text-anchor="middle" fill="#5ef38c">&#8592;  TELEMETRY &amp; VIDEO</text>
+</svg><figcaption>FIG.01: Control and data path. The flight controller owns the motors; the Pi + cellular link ride on top so a software fault never drops the aircraft out of the sky.</figcaption></figure>
+
+<p>Two rules fall straight out of this diagram. <strong>One: the flight controller must be able to fly with the Pi unplugged.</strong> You test that on the bench before you ever trust the cellular path. <strong>Two: the Pi talks to the flight controller over a wired serial link (MAVLink), not the other way around.</strong> The Pi is a guest issuing requests; the flight controller decides whether they are safe.</p>
+
+<h3>Two ways to do the flight brain</h3>
+<p>There are two clean architectures, and this handbook works with either:</p>
+<ul>
+<li><strong>Standalone flight controller + companion Pi (recommended).</strong> A dedicated board, an F7 or a <strong>Pixhawk</strong>-class autopilot, runs ArduPilot/PX4 and is wired to the Pi over serial. The two stay independent: if the Pi dies, the Pixhawk still flies. This is the most robust and the most common serious setup.</li>
+<li><strong>A dedicated flight HAT on the Pi.</strong> Boards like the <span class="mono">Navio2</span> or a Pixhawk-style autopilot HAT bolt straight onto the Raspberry Pi and turn it into the autopilot itself, no separate flight-controller board. Fewer parts and wires, but the flight brain and the companion brain now share one computer, so a Pi fault is a flight fault. Great for tidy, experimental builds where you accept that trade-off.</li>
+</ul>
+<div class="callout"><span class="l i">Which to pick</span>
+If this is your first build or you care about failsafe behavior, use a <strong>standalone Pixhawk/F7 with the Pi as companion</strong>, the separation is the whole safety story. Reach for a flight HAT when you want the smallest, most integrated airframe and are comfortable that the Pi is now flight-critical. Everything else in this handbook, cellular link, laptop control, the Claude brain, is identical either way.</div>
+</section>
+
+<section id="bom"><span class="h2num">// 03</span>
+<h2>Bill of materials &amp; cost</h2>
+<p>This is a complete, buy-it-once list for a capable 5-inch quad with a Pi companion and cellular link. Prices are typical 2026 USD for mid-range parts; you can spend less with budget brands or more chasing performance. Exact models are examples, not endorsements, match the connectors and voltages, not the brand.</p>
+
+<div class="tbl"><table>
+<thead><tr><th>Component</th><th>Example part</th><th>Why</th><th>~Cost</th></tr></thead>
+<tbody>
+<tr><td>Frame</td><td>5" carbon-fiber quad frame</td><td>Light, stiff, crash-tolerant airframe</td><td class="n">$40</td></tr>
+<tr><td>Motors ×4</td><td>2207 brushless, ~1900KV</td><td>Lift + thrust for a 4S build</td><td class="n">$60</td></tr>
+<tr><td>ESC</td><td>4-in-1 45A BLHeli_32</td><td>Drives all four motors, one board</td><td class="n">$45</td></tr>
+<tr><td>Flight controller</td><td>F7 or Pixhawk-class (or a Pi flight HAT, e.g. Navio2)</td><td>The stabilization brain</td><td class="n">$70</td></tr>
+<tr><td>Companion computer</td><td>Raspberry Pi 5 (4GB)</td><td>Runs MAVLink bridge, video, AI</td><td class="n">$60</td></tr>
+<tr><td>Cellular modem</td><td>SIM7600 4G/LTE Pi HAT</td><td>Internet in the air via SIM</td><td class="n">$75</td></tr>
+<tr><td>SIM + data</td><td>IoT/prepaid data SIM</td><td>The mobile data plan</td><td class="n">$10/mo</td></tr>
+<tr><td>GPS + compass</td><td>M10 GPS module</td><td>Position hold, waypoints, RTH</td><td class="n">$25</td></tr>
+<tr><td>Camera</td><td>Pi Camera v3 or USB cam</td><td>Live video to the laptop</td><td class="n">$30</td></tr>
+<tr><td>Battery ×2</td><td>4S 1500mAh LiPo</td><td>Flight power (carry a spare)</td><td class="n">$40</td></tr>
+<tr><td>Charger</td><td>Balance charger + LiPo bag</td><td>Safe charging is non-negotiable</td><td class="n">$50</td></tr>
+<tr><td>Propellers</td><td>5" props (+ spares)</td><td>You will break some, buy extra</td><td class="n">$15</td></tr>
+<tr><td>Radio TX/RX</td><td>ELRS transmitter + receiver</td><td>Manual backup control, always</td><td class="n">$120</td></tr>
+<tr><td>Power + wiring</td><td>PDB, XT60, connectors, BEC</td><td>Clean, fused power distribution</td><td class="n">$25</td></tr>
+<tr><td>microSD</td><td>64GB A2</td><td>Pi OS + logs + recordings</td><td class="n">$12</td></tr>
+<tr><td>Hardware</td><td>Standoffs, straps, heatshrink</td><td>The bag of bits every build needs</td><td class="n">$20</td></tr>
+</tbody>
+<tfoot>
+<tr><td colspan="3"><strong>Hardware total (one-time)</strong></td><td class="n"><strong>~$687</strong></td></tr>
+<tr><td colspan="3">Recurring: SIM data plan</td><td class="n">~$10/mo</td></tr>
+</tfoot>
+</table></div>
+
+<div class="callout war"><span class="l">Budget reality</span>
+Plan for <strong>~$700–$900 from zero to flying</strong> once you add a soldering iron, shipping, and the parts you will inevitably re-order after the first crash, plus ~$10/month for the SIM. You can shave it to ~$450 with a smaller frame, no separate radio, and a Pi Zero 2 W, or push past $1,500 with a better camera, RTK GPS, and a long-range LTE antenna. Start mid-range; you will learn what to upgrade.</div>
+</section>
+
+<section id="tools"><span class="h2num">// 04</span>
+<h2>Tools &amp; workspace</h2>
+<p>You do not need a lab. You do need a few right tools, trying to build a drone without a real soldering iron is how people give up.</p>
+<ul>
+<li><strong>Temperature-controlled soldering iron</strong> (~$40) + thin solder + flux. The single most important tool.</li>
+<li><strong>Hex drivers</strong> (1.5/2.0/2.5mm) and a small Phillips. Frame screws are M2/M3.</li>
+<li><strong>Multimeter</strong> (~$20) to check continuity and catch shorts <em>before</em> you connect a battery.</li>
+<li><strong>Smoke stopper / current-limited supply</strong> for first power-on. A $10 part that saves a $200 mistake.</li>
+<li><strong>Zip ties, double-sided foam tape, heatshrink, helping hands.</strong></li>
+<li>A clear bench, good light, and a <strong>LiPo-safe charging area</strong> away from anything flammable.</li>
+</ul>
+<div class="callout"><span class="l i">Order of operations</span>
+Charge nothing and connect no battery until the very end of assembly. Most magic-smoke moments happen because someone powered a half-soldered board to "just check". Build it fully, check continuity with the multimeter, then power through a smoke stopper first.</div>
+</section>
+
+<section id="assemble"><span class="h2num">// 05</span>
+<h2>Assembly, step by step</h2>
+<p>Build in this order. Each step leaves the aircraft in a known-good state you can check before moving on. The sequence is deliberate, power and the flight controller go in before the Pi, so you can prove the aircraft flies on its own first.</p>
+
+<figure><svg viewBox="0 0 820 150" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<g>
+<rect class="nb" x="6"   y="50" width="120" height="56" rx="8"/><text class="nl" x="66"  y="74" text-anchor="middle">Frame</text><text class="ns" x="66"  y="92" text-anchor="middle">+ motors</text>
+<rect class="nb" x="146" y="50" width="120" height="56" rx="8"/><text class="nl" x="206" y="74" text-anchor="middle">ESC</text><text class="ns" x="206" y="92" text-anchor="middle">+ power</text>
+<rect class="nb" x="286" y="50" width="120" height="56" rx="8"/><text class="nl" x="346" y="74" text-anchor="middle">Flight Ctrl</text><text class="ns" x="346" y="92" text-anchor="middle">+ GPS/RX</text>
+<rect class="nb" x="426" y="50" width="120" height="56" rx="8"/><text class="nl" x="486" y="74" text-anchor="middle">Pi + LTE</text><text class="ns" x="486" y="92" text-anchor="middle">+ camera</text>
+<rect class="nb" x="566" y="50" width="120" height="56" rx="8"/><text class="nl" x="626" y="74" text-anchor="middle">Calibrate</text><text class="ns" x="626" y="92" text-anchor="middle">bench test</text>
+<rect class="nbg" x="706" y="50" width="108" height="56" rx="8"/><text class="nl" x="760" y="74" text-anchor="middle">Fly</text><text class="ns" x="760" y="92" text-anchor="middle">props on</text>
+<path class="nf" d="M126,78 L144,78"/><path class="nf" d="M266,78 L284,78"/><path class="nf" d="M406,78 L424,78"/><path class="nf" d="M546,78 L564,78"/><path class="nf" d="M686,78 L704,78"/>
+</g>
+</svg><figcaption>FIG.02: Build sequence. Prove each stage before the next. The aircraft must fly on the radio (stage 5) before the Pi and cellular link are ever trusted.</figcaption></figure>
+
+<h3>1. Frame and motors</h3>
+<p>Assemble the frame. Mount the four motors on the arms and route their three wires toward the center. Note motor spin directions, the build instructions or your flight-controller software will tell you which two must spin reversed. Leave wires slightly long; you trim on final solder.</p>
+
+<h3>2. ESC, power distribution, and soldering</h3>
+<p>Solder the four motor triples to the 4-in-1 ESC. Solder the XT60 battery lead and the ESC's power pads, observing polarity, reversing this is the classic "magic smoke" mistake. Add a BEC if your Pi/peripherals need a clean 5V rail separate from the flight controller.</p>
+<div class="callout danger"><span class="l">Polarity = no second chances</span>
+Red to positive, black to negative, every time. A reversed battery lead will instantly kill your ESC and flight controller. Check polarity with the multimeter before the battery ever touches the connector, and do the first power-up through a smoke stopper.</div>
+
+<h3>3. Flight controller, GPS, and radio receiver</h3>
+<p>Mount the flight controller on soft standoffs (vibration isolation matters). Connect the ESC signal/telemetry, the GPS+compass to a UART, and the ELRS receiver to another UART. Keep the GPS away from power wires to avoid compass interference. This is the aircraft's nervous system, take your time on clean wiring.</p>
+
+<h3>4. Raspberry Pi, LTE HAT, and camera</h3>
+<p>Mount the Pi and its LTE HAT on the top plate with foam tape and a strap. Connect the Pi to the flight controller with a <strong>serial (TELEM) link</strong>: flight-controller TX&#8594;Pi RX, RX&#8594;TX, and a common ground, three wires. Power the Pi from the BEC, not a flimsy USB lead. Attach the camera (Pi CSI ribbon or USB) and screw on the LTE antenna.</p>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">flight-controller &#8596; Pi serial wiring</span></div>
+<pre><span class="cmt"># 3 wires, cross TX/RX, share ground</span>
+FC TELEM2 TX  <span class="ok">&#8594;</span>  Pi GPIO15 (RX)
+FC TELEM2 RX  <span class="ok">&#8592;</span>  Pi GPIO14 (TX)
+FC GND        <span class="ok">&#8212;</span>  Pi GND
+<span class="cmt"># baud 921600, MAVLink2 — set in the FC's serial config</span></pre></div>
+
+<h3>5. Calibrate and bench test (no props)</h3>
+<p>Before propellers, connect the radio and flight-controller software, then calibrate the accelerometer, compass, ESCs, and radio. Confirm the motors respond to throttle and spin the correct direction. <strong>Props stay off</strong> until every check passes and you have a working return-to-home and low-battery failsafe configured.</p>
+</section>
+
+<section id="software"><span class="h2num">// 06</span>
+<h2>Flashing &amp; software install</h2>
+<p>Two pieces of software: firmware on the flight controller, and the companion stack on the Pi. The companion stack, the MAVLink bridge, video streamer, LTE manager, and optional AI agent, lives in a GitHub repo with a one-line installer so you are not assembling it by hand.</p>
+
+<h3>Flight-controller firmware</h3>
+<p>Flash <strong>ArduPilot</strong> (Copter) or <strong>PX4</strong> with the vendor's configurator (Mission Planner or QGroundControl). Both are free, open source, and battle-tested. Pick ArduPilot if you want the richest failsafe and scripting options; PX4 if you prefer its developer tooling. Configure the airframe, calibrate sensors, and set failsafes here, not later.</p>
+
+<h3>Raspberry Pi OS and the companion stack</h3>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">on the Raspberry Pi (Pi OS Lite, 64-bit)</span></div>
+<pre><span class="pr">$</span> <span class="cmd">git clone https://github.com/ishah0908/cellular-drone.git</span>
+<span class="pr">$</span> <span class="cmd">cd cellular-drone &amp;&amp; ./install.sh</span>
+<span class="out">[1/5] installing MAVLink bridge (mavproxy, pymavlink) ...</span>
+<span class="out">[2/5] installing video pipeline (gstreamer) ...........</span>
+<span class="out">[3/5] installing LTE manager (ModemManager, nmcli) ....</span>
+<span class="out">[4/5] installing remote-link (tailscale) ..............</span>
+<span class="out">[5/5] installing optional AI agent (anthropic) ........</span>
+<span class="ok">&#10003; companion stack installed — `sudo reboot` to start services</span></pre></div>
+<p>The repo is the deliverable you hand to anyone building this: it wires the serial link to the flight controller, brings up the cellular connection on boot, starts a video stream, and exposes everything to your laptop. The README documents every service and a <span class="mono">config.yml</span> for your serial port, baud, camera, and SIM APN.</p>
+<div class="callout"><span class="l i">Why a repo, not a tarball</span>
+Hardware drifts, ports change, modems differ. A repo lets the install script detect your Pi model and modem, pin known-good library versions, and lets you <span class="mono">git pull</span> fixes after a firmware bump, without re-doing the whole setup. Fork it and make it yours.</div>
+</section>
+
+<section id="cellular"><span class="h2num">// 07</span>
+<h2>The cellular link &amp; laptop control</h2>
+<p>This is the part that makes it special: the drone gets its own internet connection, so your laptop can reach it from anywhere. Two steps, bring up LTE, then make the Pi reachable across the mobile network's NAT.</p>
+
+<h3>Bring up the SIM</h3>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">activate the 4G/LTE modem on the Pi</span></div>
+<pre><span class="pr">$</span> <span class="cmd">sudo nmcli con add type gsm ifname '*' con-name lte apn iot.1nce.net</span>
+<span class="pr">$</span> <span class="cmd">sudo nmcli con up lte</span>
+<span class="ok">&#10003; LTE up</span>  <span class="out">ip 10.64.x.x  ·  rssi -71 dBm  ·  band B2</span>
+<span class="pr">$</span> <span class="cmd">ping -c1 1.1.1.1</span>
+<span class="out">64 bytes from 1.1.1.1: time=48.2 ms</span>   <span class="cmt"># the drone is online</span></pre></div>
+
+<h3>Make the drone reachable (NAT traversal)</h3>
+<p>Mobile networks hide you behind carrier NAT, so you cannot just connect to the drone's IP. A mesh VPN like <strong>Tailscale</strong> or <strong>ZeroTier</strong> gives both the Pi and your laptop a stable private address that works through any NAT, no port forwarding, encrypted end to end.</p>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">stable private address over any network</span></div>
+<pre><span class="pr">$</span> <span class="cmd">curl -fsSL https://tailscale.com/install.sh | sh</span>
+<span class="pr">$</span> <span class="cmd">sudo tailscale up --hostname drone-01</span>
+<span class="ok">&#10003; drone-01 reachable at 100.97.x.x from your laptop, anywhere</span></pre></div>
+
+<h3>Fly it from your laptop</h3>
+<p>With the link up, point any MAVLink ground control station (Mission Planner, QGroundControl, or MAVProxy) at the drone's private address. You get the full map, telemetry, and mission planning you would have over a radio link, except range is now "wherever there is signal".</p>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">on your laptop — connect the ground station</span></div>
+<pre><span class="pr">$</span> <span class="cmd">mavproxy.py --master=udp:100.97.x.x:14550 --console --map</span>
+<span class="out">online system 1</span>
+<span class="out">GPS: 3D fix (12 sats)   Batt: 16.4V  98%   Link: 1.0 (48ms)</span>
+<span class="ok">Flight battery OK · GPS OK · EKF healthy · ready</span></pre></div>
+<div class="callout war"><span class="l">Latency is real</span>
+Cellular adds 40–120 ms and can hiccup. That is fine for high-level commands and monitoring; it is <strong>not</strong> fine for manual stick-flying acro. Keep the ELRS radio as your hands-on control and use the cellular link for missions, telemetry, and the AI layer. Always configure a <strong>link-loss failsafe</strong> (RTH or land) so a dropped signal never means a flyaway.</div>
+</section>
+
+<section id="ai"><span class="h2num">// 08</span>
+<h2>Adding a Claude AI brain</h2>
+<p>Now the interesting part. Because the Pi has internet, it can ask <strong>Claude</strong> for judgment: interpret a scene, choose between waypoints, summarize what the camera sees, or decide whether conditions are safe to continue. Claude proposes; your code enforces hard limits and the flight controller has final say. The AI is an advisor with a seatbelt, never a direct hand on the motors.</p>
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">ai_agent.py — telemetry in, a bounded decision out</span></div>
+<pre><span class="pr">$</span> <span class="cmd">export ANTHROPIC_API_KEY=sk-ant-...</span>
+
+<span class="out">import os, json, anthropic
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+RULES = """You are a flight advisor. Reply ONLY as JSON:
+{"action": "continue|hold|return", "reason": "..."}.
+Rules: if battery &lt; 30% -&gt; return. If wind high or GPS &lt; 3D -&gt; hold."""
+
+def decide(telemetry):
+    msg = client.messages.create(
+        model="claude-opus-4-8",
+        max_tokens=120,
+        system=[{"type":"text","text":RULES,
+                 "cache_control":{"type":"ephemeral"}}],  </span><span class="cmt"># cache the rules</span><span class="out">
+        messages=[{"role":"user","content":json.dumps(telemetry)}],
+    )
+    return json.loads(msg.content[0].text)</span>
+
+<span class="pr">&gt;&gt;&gt;</span> <span class="cmd">decide({"batt_pct":27,"gps":"3D","wind":"calm"})</span>
+<span class="out">{"action": </span><span class="warn">"return"</span><span class="out">, "reason": "battery below 30% threshold"}</span></pre></div>
+<p>That snippet is the whole idea: structured telemetry goes up, a small JSON decision comes back, and your code on the Pi only ever acts on it after re-checking the same limits locally. Caching the rules block keeps repeated calls fast and cheap. Swap <span class="mono">claude-opus-4-8</span> for a smaller model when you want lower latency on routine checks.</p>
+<div class="callout danger"><span class="l">Hard limits live in code, not in the prompt</span>
+Never let the model command throttle or attitude directly, and never trust it as your only safety check. Battery, geofence, altitude ceiling, and return-to-home must be enforced by the flight controller and by plain <span class="mono">if</span> statements on the Pi. Treat Claude's output as a suggestion you validate, exactly as you would a junior pilot's call.</div>
+<p>Good first uses: narrate what the camera sees into the telemetry log, flag "this looks unsafe, recommend hold", pick the next survey waypoint from a list, or summarize a flight afterward. Save direct autonomous maneuvering for after many hours of supervised testing in open, legal airspace.</p>
+</section>
+
+<section id="preflight"><span class="h2num">// 09</span>
+<h2>Pre-flight, testing &amp; first flight</h2>
+<p>The build is done; resist the urge to fling it into the sky. Earn the first flight with checks.</p>
+<h4>Bench, props off</h4>
+<ul>
+<li>Motors spin the right direction and respond to throttle; reverse any that are wrong in software.</li>
+<li>Radio failsafe triggers RTH/land when you power off the transmitter.</li>
+<li>Cellular link comes up on boot and the laptop GCS shows live telemetry.</li>
+<li>Low-battery and link-loss failsafes are configured and tested.</li>
+</ul>
+<h4>First hover</h4>
+<ul>
+<li>Props on, open area, away from people, legal airspace, full battery.</li>
+<li>Arm, lift to ~1 meter on the radio, hover a few seconds, land. Feel for drift or wobble.</li>
+<li>Only after stable manual hovering: test GPS position hold, then a single short waypoint, then the cellular/AI layer.</li>
+</ul>
+<div class="callout"><span class="l i">Build the habit, not just the drone</span>
+Every flight: visual airframe check, prop tightness, battery voltage, GPS lock, failsafe armed. The pilots who never have a bad day are the ones who never skip the boring checklist. A drone is a flying machine with spinning blades, respect it and it stays fun.</div>
+</section>
+
+<section id="cost"><span class="h2num">// 10</span>
+<h2>Total cost &amp; where to go next</h2>
+<p>End to end, expect <strong>~$700–$900</strong> in hardware to go from an empty bench to a cellular, Pi-powered drone you fly from a laptop, plus about <strong>$10/month</strong> for the SIM data and pennies per call if you use the Claude API. You can start cheaper and grow into it.</p>
+<div class="tbl"><table>
+<thead><tr><th>Tier</th><th>What changes</th><th>~Total</th></tr></thead>
+<tbody>
+<tr><td><span class="tag">LEAN</span></td><td>Smaller frame, Pi Zero 2 W, no separate radio, basic camera</td><td class="n">~$450</td></tr>
+<tr><td><span class="tag">CORE</span></td><td>The full build in this handbook</td><td class="n">~$780</td></tr>
+<tr><td><span class="tag">PRO</span></td><td>RTK GPS, HD camera, high-gain LTE antenna, spare everything</td><td class="n">~$1,500+</td></tr>
+</tbody>
+</table></div>
+<p>Where to take it once it flies: autonomous survey grids, a return-to-home triggered by Claude reading the scene, on-board recording with a post-flight AI summary, or a second airframe so you always have one flying while one charges. The platform you just built, wired flight controller, Pi brain, cellular nervous system, AI judgment, is the same shape used by serious long-range and BVLOS systems. You now understand it from the solder up.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// The companion code (MAVLink bridge, video, LTE manager, and the Claude agent) ships as an open GitHub repo with a one-line installer. Fork it, set your config.yml, and make it yours.</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // DRONE BUILD <span class="c">]</span> &middot; <span class="c">BUILD CAREFULLY, FLY LEGALLY</span></p>
+<p style="margin-top:8px;opacity:.6">Educational build guidance for lawful hobby and research use. Follow FAA / local aviation law, keep visual line of sight, and never weaponize or surveil. Not legal advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>
