@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interesting Projects // Ibrahim Sultan</title>
+<meta name="description" content="Hands-on hardware and autonomous-systems builds by Ibrahim Sultan">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.78);--hud-faint:rgba(55,212,255,.18);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:rgba(12,24,36,.84);--ink:#dff4ff;--ink-dim:#9fc4d8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(900px 480px at 82% -5%,rgba(55,212,255,.17),transparent 58%),linear-gradient(180deg,#080f1c 0%,#050b14 55%,#03070e 100%);min-height:100vh}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .topbar{position:fixed;top:14px;right:18px;z-index:62;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .topbar a{font-family:'Share Tech Mono';font-size:12px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;
+    color:#d9f4ff;border:1px solid rgba(55,212,255,.5);background:rgba(2,10,18,.75);padding:.32rem .58rem}
+  .topbar a:hover{border-color:rgba(255,182,72,.6);color:#fff4df;box-shadow:0 0 14px rgba(55,212,255,.35)}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:0 26px}
+
+  .hero{padding:110px 0 26px;text-align:center}
+  .hero .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:16px}
+  .hero h1{font-family:'Orbitron';font-weight:900;font-size:clamp(32px,6vw,62px);color:#dff6ff;letter-spacing:-.5px;line-height:1.03;text-shadow:0 0 18px rgba(55,212,255,.16)}
+  .hero h1 .c{color:var(--hud)}
+  .hero p{max-width:62ch;margin:18px auto 0;color:var(--ink-dim);font-size:18px;font-style:italic}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;padding:26px 0 90px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+  .card{display:block;text-decoration:none;border:1px solid var(--hud-faint);border-radius:12px;background:var(--panel);
+    padding:26px;transition:.22s;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--hud);box-shadow:0 0 10px var(--hud);opacity:.5;transition:.22s}
+  .card:hover{transform:translateY(-4px);border-color:var(--hud);box-shadow:0 0 30px -10px var(--hud)}
+  .card:hover::before{opacity:1}
+  .card .no{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:2px}
+  .card h3{font-family:'Orbitron';font-weight:700;font-size:21px;color:#dff6ff;margin:10px 0 8px;line-height:1.14}
+  .card p{font-size:14.5px;color:var(--ink-dim);line-height:1.6}
+  .card .tags{font-family:'Share Tech Mono';font-size:10.5px;color:var(--gold);letter-spacing:1px;margin-top:14px}
+  .card .meta{font-family:'Share Tech Mono';font-size:11px;color:var(--hud);letter-spacing:1px;margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .card.feat{grid-column:1 / -1;background:linear-gradient(110deg,rgba(58,215,255,.16),var(--panel));border-color:rgba(255,182,72,.45)}
+  .card.feat h3{font-size:27px}
+  .pill{display:inline-block;font-family:'Share Tech Mono';font-size:10px;letter-spacing:1px;padding:2px 8px;border-radius:20px;border:1px solid var(--hud-faint);color:var(--hud)}
+  .pill.dev{color:var(--gold);border-color:rgba(255,182,72,.4)}
+  .card.soon{opacity:.92}
+  .card.soon::before{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+
+  footer{padding:30px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0;max-width:1000px;margin-left:auto;margin-right:auto}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<nav class="topbar" aria-label="Primary">
+  <a href="../index.html">Portfolio</a>
+  <a href="../blog/">Blog</a>
+  <a href="../blog/handbooks/">Handbooks</a>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="kicker">// Interesting Projects</span>
+    <h1>Things I <span class="c">Build</span></h1>
+    <p>Hands-on hardware and autonomous-systems builds, documented end to end so anyone can follow along, from the parts list to the first flight.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card feat" href="../blog/handbooks/08-drone-build.html">
+      <span class="no">01 // BUILD HANDBOOK</span>
+      <h3>Build a Cellular, Pi-Powered Drone You Fly From a Laptop</h3>
+      <p>From an empty bench to a flying machine you command from anywhere over a SIM card: full parts list with real costs, wiring and assembly, a GitHub repo with a one-line install, the cellular link, and an optional Claude AI brain. Pixhawk or Raspberry Pi flight-HAT.</p>
+      <div class="tags">RASPBERRY PI · LTE/SIM · ARDUPILOT · CLAUDE API</div>
+      <div class="meta"><span>~20 MIN</span><span>10 SECTIONS</span><span>Open Handbook &#8594;</span></div>
+    </a>
+
+    <div class="card soon">
+      <span class="no">02 // R&amp;D <span class="pill dev">In Development</span></span>
+      <h3>AI-Powered Drone &amp; Vehicle Control</h3>
+      <p>Autonomous systems integration: AI-controlled drones and vehicles with remote laptop operation, real-time live traffic feed, and intelligent route optimization powered by machine learning.</p>
+      <div class="meta"><span>Coming soon</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="rule"></div>
+<footer><span class="c">[</span> INTERESTING PROJECTS <span class="c">]</span> &middot; IBRAHIM SULTAN &middot; <span class="c">BUILD CAREFULLY, FLY LEGALLY</span></footer>
+
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>
