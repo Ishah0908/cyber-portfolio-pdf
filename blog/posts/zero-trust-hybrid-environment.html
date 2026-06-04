@@ -176,7 +176,7 @@
       <div class="byline">
         <span>BY IBRAHIM SULTAN</span>
         <span>// CYBERSECURITY ENGINEER</span>
-        <span>// ~4 MIN READ</span>
+        <span>// ~22 MIN READ</span>
         <span>// REV 2026.02</span>
       </div>
     </section>
@@ -245,10 +245,80 @@ Get-MgReportAuthenticationMethodUserRegistrationDetail |
         <li>Phase 3: enforce slowly, ring by ring.</li>
       </ul>
 
+      <h2>Device trust &amp; continuous posture</h2>
+      <p>
+        A verified user on a compromised laptop is still compromised. Device posture must be continuously evaluated,
+        not just checked at login. The PDP should know in near real-time: is encryption on, is the EDR agent running
+        and reporting, is the OS patch age within policy, and has EDR flagged anything in the last hour.
+      </p>
+      <p>
+        Critical: posture failure should degrade access gracefully, not nuke it. A device 20 days behind on patches
+        shouldn't be cut off entirely. It loses access to crown-jewel apps and gets a step-up challenge, while still
+        reaching email and the patch server so the user can self-remediate.
+      </p>
+
+      <h3>Implementing continuous device monitoring</h3>
+      <div class="term"><pre><code>// Linux posture check (run via agent heartbeat)
+enc=$(lsblk -o TYPE | grep -q crypt && echo ok || echo FAIL)
+edr=$(systemctl is-active falcon-sensor)
+days=$(( ( $(date +%s) - $(stat -c %Y /var/lib/apt/periodic/) ) / 86400 ))
+printf '{
+  "disk_enc":"%s",
+  "edr":"%s",
+  "patch_age_days":%s,
+  "timestamp":"%s"
+}' "$enc" "$edr" "$days" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"</code></pre></div>
+
+      <h3>Reporting to the PDP</h3>
+      <p>
+        Device agents should report posture every 5-15 minutes depending on risk. The PDP uses this to make real-time
+        access decisions. If a device falls out of compliance mid-session, that device loses access to sensitive
+        resources immediately while maintaining access to less sensitive areas.
+      </p>
+
+      <h2>Phased rollout that survives reality</h2>
+      <p>
+        Eighteen to thirty months is realistic. Anyone promising a year is selling something. Front-load the work
+        that reduces risk fastest (identity) and back-load the work that's most disruptive (full segmentation).
+      </p>
+
+      <h3>Phase sequence</h3>
+      <ul>
+        <li><strong>Months 0-3 (Foundation):</strong> Asset inventory, tag all data by sensitivity, stand up PDP, break-glass accounts.</li>
+        <li><strong>Months 3-9 (Identity):</strong> Phishing-resistant MFA for admins, conditional access as code, kill standing privilege.</li>
+        <li><strong>Months 6-12 (Device):</strong> Posture signals into PDP, ZTNA replaces VPN for key apps.</li>
+        <li><strong>Months 9-24 (Segmentation):</strong> Observe → model → enforce, ring by ring. Start with highest-value zones.</li>
+      </ul>
+
+      <h2>Anti-patterns that destroy projects</h2>
+      <ul>
+        <li><strong>"Zero Trust" as a product:</strong> No single box gives you ZT. It's an architecture. Don't declare victory on tooling.</li>
+        <li><strong>Boiling the ocean:</strong> Trying to segment everything at once. Pick one high-value zone. Make it real end-to-end.</li>
+        <li><strong>Forgetting machine identity:</strong> Service accounts, CI/CD tokens, and workload identities outnumber humans 10:1 and are usually over-permissioned.</li>
+        <li><strong>Posture as a binary axe:</strong> Hard allow/deny on device posture floods the help desk and kills adoption. Degrade gracefully.</li>
+        <li><strong>No exception expiry:</strong> Every exception must have an owner and expiry. Expired exceptions get reviewed or deleted.</li>
+      </ul>
+
+      <h2>Measuring what matters</h2>
+      <p>
+        You can't improve what you don't measure. Track these:
+      </p>
+      <ul>
+        <li><strong>Lateral movement surface:</strong> Count of allowed east-west flow-pairs. Should fall steadily as you segment.</li>
+        <li><strong>Standing privilege count:</strong> Permanent privileged role assignments. Target: zero.</li>
+        <li><strong>Phishing-resistant MFA coverage:</strong> % of identities on FIDO2/passkeys, weighted by privilege.</li>
+        <li><strong>Mean time to revoke:</strong> From "session flagged risky" to "access actually cut." Should be minutes, not hours.</li>
+        <li><strong>Auth-related help-desk tickets:</strong> Watch this like a hawk. A spike means your friction is too high.</li>
+      </ul>
+
       <h2>What I'd tell my past self</h2>
       <p>
-        Don't try to do everything at once. Pick one identity boundary, one workload boundary, and one data boundary.
-        Measure the reduction in lateral movement before you expand.
+        Zero Trust is not a destination. It's a posture you maintain. Spend the first month purely on inventory: identities,
+        devices, data, flows. Treat the IdP as tier-0 from day one. Measure friction from the first rollout because the fastest
+        way to kill a security program isn't a breach—it's a thousand annoyed employees and an executive who decides it's not worth it.
+      </p>
+      <p>
+        Build the lighthouse. Make Zero Trust real in one place. Then let the light spread.
       </p>
     </article>
 

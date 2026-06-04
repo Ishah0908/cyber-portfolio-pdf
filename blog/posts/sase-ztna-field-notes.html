@@ -66,36 +66,150 @@
   <div class="wrap">
     <a class="btn" href="../">Back to Blog</a>
     <h1>SASE + ZTNA Field Notes</h1>
-    <div class="meta">Published April 14, 2026 · 7 min read</div>
+    <div class="meta">Published April 14, 2026 · 16 min read</div>
 
     <p>
-      Most zero trust programs fail in rollout, not design. Start with low-risk user groups,
-      enforce posture checks gradually, and keep exception paths observable.
+      SASE and Zero Trust Network Access (ZTNA) are sold as magic bullets: replace VPN, enforce policies, done.
+      The reality is messier. Most Zero Trust programs fail in rollout, not design. This is what works, learned from
+      deployments in financial services, healthcare, and cloud-native orgs. The secret: move slowly, measure relentlessly,
+      and never break user productivity.
     </p>
 
-    <h2>1. Pilot Sequence</h2>
+    <h2>The Real Problem with Replacing VPN</h2>
     <p>
-      Begin with engineering and IT teams, then move to finance and HR, then vendor access.
-      Measure latency, login failure rates, and helpdesk load before each expansion.
+      Everyone hates VPN, but it works in terrible conditions. A ZTNA rollout that breaks app access for remote workers
+      kills the entire program. Fix: run both for 6-12 months. Let teams migrate gradually. Only deprecate VPN after ZTNA
+      handles 99%+ of use cases.
     </p>
 
-    <h2>2. Baseline Verification Commands</h2>
-    <pre><code># TLS and cert chain validation
-openssl s_client -connect app.example.com:443 -servername app.example.com
-
-# Verify DNS resolution from branch locations
-dig +short app.example.com
-
-# Inspect route and latency hops
-traceroute app.example.com
-
-# Capture handshake and packet behavior
-sudo tcpdump -ni any host app.example.com and port 443</code></pre>
-
-    <h2>3. Operational Guardrails</h2>
+    <h2>SASE/ZTNA Architecture Essentials</h2>
     <p>
-      Keep policy versioning in Git, define rollback windows, and tag every emergency bypass with
-      owner, reason, and expiry.
+      A production deployment needs:
+    </p>
+    <ul>
+      <li><strong>Client-side gateway:</strong> Lightweight agent filtering per-app outbound traffic.</li>
+      <li><strong>Cloud security service:</strong> Decrypts, inspects, re-encrypts. Enforces policy. Logs everything.</li>
+      <li><strong>Identity sync:</strong> Real-time with your IdP. Know who's requesting at all times.</li>
+      <li><strong>Device posture:</strong> Reject/downgrade access if device is non-compliant.</li>
+      <li><strong>DNS/HTTP inspection:</strong> Block C&amp;C, detect exfiltration, enforce acceptable use.</li>
+      <li><strong>Fallback paths:</strong> What if the cloud gateway fails? Users reach critical apps with degraded policy.</li>
+    </ul>
+
+    <h2>The Pilot Sequence That Works</h2>
+
+    <h3>Wave 1: IT &amp; Engineering (Weeks 1-4)</h3>
+    <ul>
+      <li>Deploy to non-critical apps first (collab tools, docs, monitoring).</li>
+      <li>Measure: connection stability, latency added, setup friction.</li>
+      <li>Go/no-go: zero connectivity failures over 2 weeks, &lt;50ms latency added.</li>
+    </ul>
+
+    <h3>Wave 2: Finance &amp; Business (Weeks 5-8)</h3>
+    <ul>
+      <li>Same non-critical apps, monitor-only mode (log but don't block).</li>
+      <li>Measure: helpdesk tickets, policy violations, login failures.</li>
+      <li>Go/no-go: &lt;5 tickets per 100 users/week, 95%+ policy success rate.</li>
+    </ul>
+
+    <h3>Wave 3: Vendor &amp; Partner Access (Weeks 9-16)</h3>
+    <ul>
+      <li>Client-less gateway (Okta, Cloudflare portal).</li>
+      <li>Stricter policies: read-only, all logged, session recording enabled.</li>
+      <li>Measure: approval time, audit trail completeness.</li>
+    </ul>
+
+    <h3>Wave 4: Critical Apps (Weeks 17-26)</h3>
+    <ul>
+      <li>After 6 months of production data and incident handling.</li>
+      <li>Pair with comms plan: "VPN sunsetting, here's your timeline."</li>
+      <li>Keep VPN as fallback for 3 months after ZTNA goes live.</li>
+    </ul>
+
+    <h2>Network Diagnostics &amp; Validation</h2>
+
+    <h3>TLS Certificate Validation</h3>
+    <pre><code># Verify gateway certificate and chain
+openssl s_client -connect ztna-gateway.example.com:443 -servername ztna-gateway.example.com
+
+# Check certificate expiry
+openssl s_client -connect ztna-gateway.example.com:443 2>/dev/null | \
+  openssl x509 -noout -dates
+
+# Verify CA chain
+openssl s_client -connect ztna-gateway.example.com:443 -showcerts 2>/dev/null | \
+  grep "Issuer:"</code></pre>
+
+    <h3>DNS &amp; Geo-Routing</h3>
+    <pre><code># Test DNS resolution
+dig +short app.example.com @ztna-gateway.example.com
+
+# See which regional gateway traffic is routed to
+traceroute -m 10 app.example.com
+
+# Measure latency to regional endpoints
+ping -c 4 ztna-us-east.example.com
+ping -c 4 ztna-eu-west.example.com
+ping -c 4 ztna-apac-sg.example.com</code></pre>
+
+    <h3>Client Health</h3>
+    <pre><code># Verify client is running and connected
+systemctl status ztna-client  # Linux
+
+# Check if client is intercepting traffic
+tcpdump -ni any dst port 443 and src 10.0.0.0/8 | head -5
+
+# View local policy cache
+cat /var/log/ztna-client/policy-cache.json | jq '.rules | length'
+
+# Monitor client logs
+tail -f /var/log/ztna-client/client.log</code></pre>
+
+    <h2>Policy Versioning &amp; Rollback</h2>
+    <pre><code># Policies as code in Git
+git log --oneline policies/ | head -20
+
+# See what changed
+git show HEAD:policies/prod/access-rules.yaml | \
+  diff - <(cat policies/prod/access-rules.yaml)
+
+# Tag production releases
+git tag -a policy-prod-v2026.01.15 -m "Production policies, January 2026"
+
+# Rollback if needed
+git checkout policy-prod-v2026.01.10 -- policies/prod/
+git commit -m "Rollback policies due to connectivity issue"
+git push origin master</code></pre>
+
+    <h2>The Exception Trap</h2>
+    <p>
+      Every SASE/ZTNA deployment accumulates exceptions: "app X doesn't work, bypass it." Rules:
+    </p>
+    <ul>
+      <li>Every exception has: owner, business reason, expiry date.</li>
+      <li>Reviewed monthly. Expired ones are deleted, not renewed silently.</li>
+      <li>Renewed more than twice? Escalate and plan root-cause fix.</li>
+    </ul>
+
+    <h2>What Actually Breaks in Production</h2>
+    <ul>
+      <li><strong>Legacy apps requiring direct IP routing.</strong> Plan early remediation or accept exceptions.</li>
+      <li><strong>High-throughput pipelines.</strong> Inspection adds latency. Measure and accept complaints.</li>
+      <li><strong>Client conflicts.</strong> ZTNA + Symantec + CrowdStrike fighting for network stack. Test extensively.</li>
+      <li><strong>Split-DNS leaks.</strong> Your ZTNA enforces DNS, theirs leaks out anyway.</li>
+      <li><strong>Mobile roaming.</strong> Clients lose connection on network transitions. Need quick re-auth policy.</li>
+    </ul>
+
+    <h2>The Metric That Matters</h2>
+    <p>
+      Track Mean Time to Productivity (MTTP): how long from "user wants access" to "user has access"?
+      Keep it under 5 minutes. If it exceeds 15 minutes, adoption fails.
+    </p>
+
+    <h2>Bottom Line</h2>
+    <p>
+      SASE/ZTNA is not a project you finish. It's an operational posture you maintain. Pilot with low-risk groups.
+      Measure everything. Keep the exception path observable. Never break user productivity. Move slowly and methodically,
+      and you'll have a program that actually works.
     </p>
   </div>
 </body>

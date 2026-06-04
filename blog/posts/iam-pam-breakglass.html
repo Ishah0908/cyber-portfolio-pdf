@@ -66,36 +66,170 @@
   <div class="wrap">
     <a class="btn" href="../">Back to Blog</a>
     <h1>IAM/PAM Break-Glass Playbook</h1>
-    <div class="meta">Published December 9, 2025 · 6 min read</div>
+    <div class="meta">Published December 9, 2025 · 18 min read</div>
 
     <p>
-      Emergency access is necessary, but unmanaged break-glass accounts become attacker shortcuts.
-      Treat emergency credentials as controlled explosives: sealed, logged, and time-bound.
+      Emergency access is necessary, but unmanaged break-glass accounts become attacker shortcuts. Treat emergency
+      credentials as controlled explosives: sealed, logged, and time-bound. A poorly managed break-glass account that
+      gets compromised is a direct path to complete infrastructure takeover during the chaos of an active incident.
     </p>
 
-    <h2>1. Break-Glass Design Checklist</h2>
+    <h2>The Break-Glass Problem</h2>
     <p>
-      Use hardware-backed MFA, dual-approval workflows, and short credential validity windows.
-      Enforce post-incident review within 24 hours.
+      Break-glass (or break-emergency) accounts exist for one reason: when normal access controls fail during an incident,
+      you need a way in that doesn't depend on IdP availability, MFA systems, or conditional access engines. But this creates
+      a paradox: the account that provides emergency access is also the account that, if compromised, bypasses all your defenses.
+    </p>
+    <p>
+      Most organizations handle this poorly. They create one or two break-glass accounts, write the credentials down (or worse,
+      keep them in an old wiki page), and check the annual box that says "we have emergency access." The reality: if that
+      account ever gets used, nobody knows, nobody logs it properly, and the credentials are often more than a year old.
     </p>
 
-    <h2>2. Audit and Verification Commands</h2>
-    <pre><code># Linux auth trace review
-sudo ausearch -m USER_AUTH,USER_ACCT -ts recent
-
-# Quick privilege inventory
-getent group sudo
-
-# Cloud IAM policy snapshot (example)
-gcloud projects get-iam-policy PROJECT_ID --format=json > iam-snapshot.json
-
-# Diff policy changes
-jq '.bindings' iam-snapshot.json</code></pre>
-
-    <h2>3. Incident Logging Requirements</h2>
+    <h2>Architectural Principles</h2>
     <p>
-      Capture ticket ID, approving authority, accessed assets, actions taken, and session recording references.
-      Rotate and vault all temporary credentials immediately after closure.
+      Break-glass accounts must be:
+    </p>
+    <ul>
+      <li><strong>Physically separated:</strong> Stored in a physical safe, vault, or HSM. Not in Okta. Not in your password manager.</li>
+      <li><strong>Multi-person required:</strong> No one person can unilaterally activate them. Require dual keys or escrow.</li>
+      <li><strong>Logged loudly:</strong> Every activation triggers alerts to multiple teams and creates an audit trail that can't be deleted.</li>
+      <li><strong>Time-bounded:</strong> If you activate credentials, they expire in hours, not days. New ones for each incident.</li>
+      <li><strong>Post-incident reviewed:</strong> Within 24 hours, leadership reviews why it was needed and what was accessed.</li>
+    </ul>
+
+    <h2>Implementation Strategy</h2>
+
+    <h3>On-Premises / Hybrid</h3>
+    <p>
+      Maintain 2-4 break-glass Domain Admin accounts in Active Directory that:
+    </p>
+    <ul>
+      <li>Have no logon rights except from a secured physical device.</li>
+      <li>Are disabled by default. Enabling them creates an event in Sysmon and forwards to a SIEM trigger.</li>
+      <li>Have all password-reset history disabled so compromised credentials can't be traced backward.</li>
+      <li>Are subject to session recording (Deception Monkey, Privilege Manager recording, or appliance-level logging).</li>
+    </ul>
+
+    <h3>Cloud (AWS / Azure / GCP)</h3>
+    <p>
+      Create dedicated break-glass IAM users or roles that:
+    </p>
+    <pre><code># AWS Example: Break-Glass User with Inline Policy
+aws iam create-user --user-name break-glass-incident-responder-a
+
+# Attach a policy that grants minimal but sufficient access
+aws iam put-user-policy --user-name break-glass-incident-responder-a \
+  --policy-name EmergencyAdminPolicy \
+  --policy-document file://emergency-policy.json
+
+# Lock it down with a Service Control Policy (SCP) that only allows activation
+# during business hours and from a specific IP range
+# Store the access keys in AWS Secrets Manager with automatic rotation disabled
+
+# Enable CloudTrail logging on the account and alerts on ANY break-glass usage
+aws cloudtrail put-event-selectors --trail-name management-events \
+  --event-selectors '{ "ReadWriteType": "All", "IncludeManagementEvents": true }'</code></pre>
+
+    <h3>Kubernetes / Container Infrastructure</h3>
+    <p>
+      Create a break-glass service account that:
+    </p>
+    <ul>
+      <li>Has cluster-admin role binding but is disabled by default via RBAC deny policy.</li>
+      <li>Can only be activated via a manual admission webhook that logs to an immutable audit destination.</li>
+      <li>Gets a unique token per incident (short-lived, rotated hourly).</li>
+      <li>Actions are captured in the API audit log with PII redaction disabled for incident investigation.</li>
+    </ul>
+
+    <h2>Activation Workflow</h2>
+    <p>
+      When an incident requires break-glass access:
+    </p>
+    <ol>
+      <li><strong>Page the duty manager and one other approver.</strong> Both must approve via out-of-band channels (phone, SMS, not Slack).</li>
+      <li><strong>Create a ticket in your incident management system</strong> with: incident ID, approvers, time of activation, intended access scope.</li>
+      <li><strong>Physically unlock the safe (if on-prem) or retrieve the credentials from AWS Secrets Manager</strong> (with MFA and approval logs).</li>
+      <li><strong>Generate a new password/key for this use only.</strong> Do not use a year-old key.</li>
+      <li><strong>Activate the account.</strong> This should trigger alerts immediately to your SOC.</li>
+      <li><strong>Enable session recording before any actions.</strong> If it's Kubernetes, ensure audit logging is on.</li>
+      <li><strong>Perform only the minimum actions required to resolve the incident.</strong> No browsing, no "while I'm in here" exploration.</li>
+      <li><strong>Disable the account the moment the incident is over.</strong> Don't wait for end-of-shift or end-of-incident meeting.</li>
+      <li><strong>Rotate all temporary keys/passwords immediately.</strong> Destroy the old ones, don't vault them.</li>
+      <li><strong>Within 24 hours, hold a post-incident review.</strong> Was the emergency access actually needed? Could a normal elevated permission have handled it? Did anything unexpected happen?</li>
+    </ol>
+
+    <h2>Audit and Verification Commands</h2>
+
+    <h3>Linux / On-Premises</h3>
+    <pre><code># Verify break-glass accounts exist but are disabled
+getent passwd | grep break-glass
+
+# Check account is locked
+passwd -S break-glass-account-1
+
+# Verify no interactive login allowed in /etc/security/access.conf or PAM
+grep -r "break-glass" /etc/pam.d/
+
+# Review all invocations via sudo logs
+journalctl -u sudo --all --lines=500 | grep break-glass
+
+# Audit trail (if using auditd)
+sudo ausearch -k break-glass-activation -ts recent</code></pre>
+
+    <h3>Cloud (AWS)</h3>
+    <pre><code># List all break-glass users
+aws iam list-users --query 'Users[?contains(UserName, `break-glass`)]'
+
+# Check access keys attached (should be none or rotated regularly)
+aws iam list-access-keys --user-name break-glass-incident-responder-a
+
+# Pull CloudTrail events for any break-glass usage
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=Username,AttributeValue=break-glass-incident-responder-a \
+  --start-time 2026-01-01T00:00:00Z \
+  --query 'Events[*].[EventTime,EventName,Username,CloudTrailEvent]' \
+  --output table</code></pre>
+
+    <h3>Azure</h3>
+    <pre><code># List break-glass accounts in Azure AD
+az ad user list --filter "displayName eq 'Break Glass Incident Responder A'" \
+  --query '[].{id:id,userPrincipalName:userPrincipalName,accountEnabled:accountEnabled}'
+
+# Check for any sign-in events
+az ad audit sign-in-logs list \
+  --filter "userPrincipalName eq 'breakglass-a@company.onmicrosoft.com'" \
+  --query '[].{createdDateTime:createdDateTime,status:status,ipAddress:ipAddress}'
+
+# Verify MFA is enforced on the account
+az ad user show --id breakglass-a@company.onmicrosoft.com | jq '.strongAuthenticationRequirements'</code></pre>
+
+    <h2>What Happens When Break-Glass Gets Compromised</h2>
+    <p>
+      If you discover a break-glass account was used by an attacker (not a legitimate incident responder), you're in a
+      recovery scenario. Immediate actions:
+    </p>
+    <ul>
+      <li><strong>Assume full infrastructure compromise.</strong> Every system that account can reach has been potentially accessed.</li>
+      <li><strong>Force a password reset on every account that shares the IdP or domain.</strong> The attacker may have harvested credentials during their time in the system.</li>
+      <li><strong>Revoke all active sessions and tokens.</strong> Don't just expire them; revoke them immediately.</li>
+      <li><strong>Begin forensic analysis of that account's CloudTrail / audit logs.</strong> What did it actually do? When? From where?</li>
+      <li><strong>Check for privilege escalation chains.</strong> Did the attacker use break-glass to grant themselves persistent access through a backdoor?</li>
+    </ul>
+
+    <h2>The Honest Truth</h2>
+    <p>
+      Most break-glass implementations fail not because the design is bad, but because:
+    </p>
+    <ul>
+      <li>The credentials are too easy to find.</li>
+      <li>Nobody actually tests the activation process until an incident happens.</li>
+      <li>Logging is incomplete or gets deleted in a purge.</li>
+      <li>The organization treats break-glass as a "just in case" thing and never maintains it.</li>
+    </ul>
+    <p>
+      If you implement break-glass, own it. Test the activation every quarter. Review the logs monthly. Rotate the credentials
+      annually. And if it's ever used, investigate it like you're investigating a breach—because until you prove otherwise, it might be one.
     </p>
   </div>
 </body>
