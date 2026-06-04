@@ -280,129 +280,71 @@
       background: linear-gradient(180deg, rgba(2, 8, 15, 0.08), rgba(2, 8, 15, 0.8));
     }
     .tunnel-viewport {
-      position: sticky;
-      top: 88px;
-      height: min(78vh, 760px);
-      perspective: 2100px;
-      perspective-origin: center 38%;
-      overflow: hidden;
-      touch-action: none;
+      position: relative;
+      height: auto;
+      padding: 40px 20px;
+      overflow: visible;
+      touch-action: auto;
     }
     .tunnel-stage {
       position: relative;
       width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
+      height: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     .tunnel-hud {
-      position: absolute;
-      top: 22px;
-      left: 22px;
-      right: 22px;
-      z-index: 3;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      color: #9ddff0;
-      font-size: 0.7rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      pointer-events: none;
+      display: none;
     }
     .tunnel-hud strong {
       color: #eefaff;
       font-weight: 700;
     }
     .tunnel-controls {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 22px;
-      z-index: 4;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      pointer-events: none;
+      display: none;
     }
     .tunnel-control-btn {
-      pointer-events: auto;
-      border: 1px solid rgba(78, 225, 255, 0.52);
-      background: rgba(4, 14, 24, 0.78);
-      color: #e6fbff;
-      min-width: 42px;
-      min-height: 42px;
-      font: inherit;
-      font-size: 0.82rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      box-shadow: 0 0 18px rgba(55, 212, 255, 0.16);
-    }
-    .tunnel-control-btn:hover,
-    .tunnel-control-btn:focus-visible {
-      border-color: rgba(179, 239, 255, 0.92);
-      box-shadow: 0 0 24px rgba(55, 212, 255, 0.28);
-      outline: none;
+      display: none;
     }
     .tunnel-progress {
-      flex: 1;
-      height: 7px;
-      border: 1px solid rgba(78, 225, 255, 0.35);
-      background: rgba(7, 21, 33, 0.72);
-      box-shadow: inset 0 0 12px rgba(55, 212, 255, 0.08);
-      overflow: hidden;
+      display: none;
     }
     .tunnel-progress-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, rgba(55, 212, 255, 0.9), rgba(255, 182, 72, 0.86));
-      box-shadow: 0 0 20px rgba(55, 212, 255, 0.42);
-      transition: width 120ms ease;
+      display: none;
     }
     .tunnel-card {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: clamp(190px, 23vw, 280px);
-      aspect-ratio: 0.82;
-      border: 2px solid rgba(55, 212, 255, 0.68);
-      background: linear-gradient(180deg, rgba(7, 24, 40, 0.92), rgba(3, 12, 21, 0.94));
-      box-shadow:
-        0 0 32px rgba(55, 212, 255, 0.28),
-        0 0 64px rgba(55, 212, 255, 0.12),
-        inset 0 0 28px rgba(83, 215, 255, 0.12);
-      transform-style: preserve-3d;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(55, 212, 255, 0.5);
+      background: rgba(7, 24, 40, 0.8);
+      box-shadow: 0 0 16px rgba(55, 212, 255, 0.15);
       overflow: hidden;
       padding: 0;
       cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: box-shadow 200ms ease, border-color 200ms ease, filter 200ms ease, opacity 180ms ease;
+      transition: all 220ms ease;
     }
     .tunnel-card:hover,
     .tunnel-card:focus-visible {
-      border-color: rgba(55, 212, 255, 0.98);
-      box-shadow:
-        0 0 48px rgba(55, 212, 255, 0.52),
-        0 0 92px rgba(55, 212, 255, 0.28),
-        inset 0 0 32px rgba(83, 215, 255, 0.18);
-      filter: saturate(1.18) brightness(1.12);
+      border-color: rgba(55, 212, 255, 0.8);
+      box-shadow: 0 0 24px rgba(55, 212, 255, 0.3);
       outline: none;
     }
     .tunnel-card img {
       position: absolute;
-      inset: 12px 12px 48px;
-      width: calc(100% - 24px);
-      height: calc(100% - 60px);
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
-      filter: saturate(0.76) hue-rotate(178deg) brightness(0.86) contrast(1.05);
-      transition: filter 180ms ease, transform 180ms ease;
+      transition: transform 220ms ease;
     }
     .tunnel-card:hover img,
     .tunnel-card:focus-visible img {
-      filter: saturate(1) hue-rotate(0deg) brightness(1) contrast(1.04);
-      transform: scale(1.015);
+      transform: scale(1.05);
     }
     .tunnel-card::before,
     .tunnel-card::after {
@@ -412,43 +354,31 @@
       pointer-events: none;
     }
     .tunnel-card::before {
-      background:
-        linear-gradient(180deg, rgba(73, 190, 255, 0.32), rgba(73, 190, 255, 0.08) 40%, rgba(6, 18, 28, 0.06) 100%),
-        linear-gradient(120deg, rgba(65, 180, 255, 0.24), transparent 45%, rgba(65, 180, 255, 0.16) 100%);
-      mix-blend-mode: screen;
-      filter: sepia(0.18) hue-rotate(150deg);
-      opacity: 0.91;
-      transition: opacity 200ms ease, filter 200ms ease;
+      background: linear-gradient(180deg, rgba(55, 212, 255, 0.1), transparent 50%);
+      mix-blend-mode: overlay;
+      opacity: 0.4;
+      transition: opacity 220ms ease;
     }
     .tunnel-card:hover::before,
     .tunnel-card:focus-visible::before {
-      opacity: 0.08;
-      filter: sepia(0) hue-rotate(0deg);
+      opacity: 0.1;
     }
     .tunnel-card::after {
-      background: linear-gradient(180deg,
-        rgba(96, 228, 255, 0) 0%,
-        rgba(96, 228, 255, 0.28) 45%,
-        rgba(96, 228, 255, 0.18) 50%,
-        rgba(96, 228, 255, 0) 100%);
-      animation: scanlinesSweep 3.2s linear infinite;
-      opacity: 0.68;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(55, 212, 255, 0.03) 0px,
+        rgba(55, 212, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      opacity: 0.3;
     }
     .tunnel-card[data-active="true"] {
-      border-color: rgba(55, 212, 255, 0.98);
-      box-shadow:
-        0 0 64px rgba(55, 212, 255, 0.58),
-        0 0 128px rgba(55, 212, 255, 0.32),
-        0 0 48px rgba(255, 182, 72, 0.36),
-        inset 0 0 34px rgba(130, 231, 255, 0.18);
+      border-color: rgba(255, 182, 72, 0.7);
+      box-shadow: 0 0 24px rgba(255, 182, 72, 0.2);
     }
     .frame-bracket {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border: 2.5px solid rgba(55, 212, 255, 0.92);
-      z-index: 2;
-      filter: drop-shadow(0 0 12px rgba(55, 212, 255, 0.54)) drop-shadow(0 0 6px rgba(96, 228, 255, 0.28));
+      display: none;
     }
     .frame-bracket.tl { top: 7px; left: 7px; border-right: 0; border-bottom: 0; }
     .frame-bracket.tr { top: 7px; right: 7px; border-left: 0; border-bottom: 0; }
@@ -999,28 +929,10 @@
         return;
       }
 
-      const eased = tunnelProgress * tunnelProgress * (3 - 2 * tunnelProgress);
-      const center = (tunnelCards.length - 1) / 2;
-      const activeIndex = Math.round(eased * (tunnelCards.length - 1));
+      const activeIndex = Math.round(tunnelProgress * (tunnelCards.length - 1));
 
       tunnelCards.forEach((card, index) => {
-        const distance = index - center;
-        const depth = -1280 + index * -250 + eased * 2250;
-        const nearFactor = Math.max(0, 1 - Math.abs(depth) / 1100);
-        const lateral = distance * (126 + Math.max(0, -depth) * 0.035) + Math.sin((eased + index * 0.08) * Math.PI) * 24;
-        const vertical = distance * distance * 12 - eased * 68 + Math.cos((eased * 2 + index * 0.15) * Math.PI) * 10 + (index % 2 === 0 ? -16 : 16);
-        const rotateY = distance * -9 - 14 + eased * 22;
-        const rotateX = -9 + nearFactor * 10;
-        const isHovered = index === hoverIndex;
         const isActive = index === activeIndex;
-        const scale = 0.7 + nearFactor * 0.48 + eased * 0.04 + (isHovered ? 0.12 : 0) + (isActive ? 0.03 : 0);
-        const opacity = 0.16 + nearFactor * 0.9;
-        const hoverLift = isHovered ? 120 : 0;
-
-        card.style.transform = `translate3d(${lateral}px, ${vertical}px, ${depth + hoverLift}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
-        card.style.opacity = opacity.toFixed(3);
-        card.style.zIndex = String(1000 + Math.round(nearFactor * 1000) + (isHovered ? 600 : 0));
-        card.style.filter = isActive || isHovered ? "brightness(1.08) saturate(1.18)" : `brightness(${(0.78 + nearFactor * 0.22).toFixed(3)}) saturate(${(0.86 + nearFactor * 0.18).toFixed(3)})`;
         card.dataset.active = String(isActive);
       });
 
