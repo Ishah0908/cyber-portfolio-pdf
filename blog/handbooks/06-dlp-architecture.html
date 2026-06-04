@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Loss Prevention Architecture: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Data Protection</span>
+  <h1>DLP That Stops <span class="c">Real Leaks</span> Without Drowning in False Positives</h1>
+  <p class="standfirst">Most DLP deployments fail the same way: too many alerts, all ignored, and the actual leak walks out anyway. Here is how I build classification, tune policy, cut false positives, and cover endpoint, email, SaaS, API, and network without making everyone hate the program.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~30 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#why">Why DLP usually fails</a></li>
+<li><a href="#classify">Classification comes first</a></li>
+<li><a href="#channels">The five channels</a></li>
+<li><a href="#tuning">Policy tuning &amp; false positives</a></li>
+<li><a href="#forensics">When you find a real one</a></li>
+<li><a href="#insider">Accident, negligence, or malice</a></li>
+<li><a href="#genai">The newest leak channel: GenAI</a></li>
+<li><a href="#close">The honest take</a></li>
+</ol></nav>
+
+<section id="why"><span class="h2num">// 01</span>
+<h2>Why DLP usually fails</h2>
+<p>I have seen more failed DLP programs than successful ones, and the failure is almost always the same shape. The team turns on every policy at full sensitivity, the SOC gets buried in thousands of alerts (most of them someone emailing their own spreadsheet to themselves), everyone learns to ignore the DLP queue, and six months later real data walks out through a channel nobody tuned. The tool worked. The program failed.</p>
+<p>The reframe that makes DLP succeed: <strong>you cannot protect everything, so do not try.</strong> Identify the genuinely sensitive data, the stuff that would actually hurt if it leaked, and protect that well across the channels it could leave by. A narrow, well-tuned program that catches real leaks beats a broad, noisy one that catches nothing because nobody reads it.</p>
+<div class="callout"><span class="l i">DLP is a data project wearing a security costume</span>
+The hard part of DLP is not the blocking technology. It is knowing what your sensitive data is, where it lives, and what legitimate movement looks like. Teams that treat it as a tool deployment fail. Teams that treat it as a data-understanding project that happens to end in enforcement succeed.</div>
+</section>
+
+<section id="classify"><span class="h2num">// 02</span>
+<h2>Classification comes first, or nothing works</h2>
+<p>A DLP policy can only act on data it can recognize. So before enforcement, you need a classification model: what categories of sensitive data do you have (PII, payment data, source code, trade secrets, regulated health data), and how does a tool identify each. Identification comes in layers, from cheap and noisy to expensive and precise.</p>
+
+<div class="tbl"><table>
+<tr><th>Method</th><th>Catches</th><th>Tradeoff</th></tr>
+<tr><td>Regex / pattern</td><td>Card numbers, SSNs, structured IDs</td><td>Cheap, but false-positive prone alone</td></tr>
+<tr><td>Keyword / dictionary</td><td>Project names, "confidential" markings</td><td>Easy to evade, context-blind</td></tr>
+<tr><td>Exact data match</td><td>Known records (your customer DB)</td><td>Precise, needs a fingerprint of the source</td></tr>
+<tr><td>Document fingerprint</td><td>Specific files and their derivatives</td><td>Strong for known docs, not new ones</td></tr>
+<tr><td>ML / classifier</td><td>Unstructured "looks like a contract"</td><td>Flexible, needs tuning, can drift</td></tr>
+</table></div>
+
+<p>The single biggest false-positive reducer is combining methods. A nine-digit number is not an SSN. A nine-digit number near the words "social security" in a document tagged from HR, leaving to a personal email, is. Layer the signals.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">a layered match beats a lone regex (illustrative policy logic)</span></div>
+<pre><span class="out">RULE high_confidence_pii_exfil:
+  MATCH  pattern.ssn        </span><span class="cmt"># 9-digit SSN format</span><span class="out">
+  AND    proximity_keyword IN ["ssn","social security","dob"] within 50 chars
+  AND    count(pattern.ssn) &gt;= </span><span class="warn">5</span><span class="out">   </span><span class="cmt"># bulk, not one stray number</span><span class="out">
+  AND    destination NOT IN corp_domains
+  THEN   block + alert(severity=high)</span>
+<span class="cmt"># one of these conditions alone = noise. all four = a real leak.</span></pre></div>
+</section>
+
+<section id="channels"><span class="h2num">// 03</span>
+<h2>The five channels data leaves by</h2>
+<p>Data exfiltrates through a finite set of paths, and a complete program covers all of them. Cover them in order of risk for your org, not all at once.</p>
+
+<figure><svg viewBox="0 0 820 180" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.db{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.dc{fill:rgba(255,182,72,.07);stroke:#ffb648;stroke-width:1.3;rx:8}.dl{font-family:'Orbitron';font-size:11px;font-weight:700;fill:#fff}.ds{font-family:'Share Tech Mono';font-size:8px;fill:#8aa0b8}.df{stroke:#37d4ff;stroke-width:1.1;fill:none;opacity:.55;marker-end:url(#da)}</style>
+<marker id="da" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="dc" x="320" y="66" width="180" height="48" rx="8"/><text class="dl" x="410" y="86" text-anchor="middle" fill="#ffb648">SENSITIVE DATA</text><text class="ds" x="410" y="102" text-anchor="middle">classified at rest</text>
+<rect class="db" x="20" y="14" width="150" height="40" rx="7"/><text class="dl" x="95" y="38" text-anchor="middle">ENDPOINT</text>
+<rect class="db" x="20" y="126" width="150" height="40" rx="7"/><text class="dl" x="95" y="150" text-anchor="middle">EMAIL</text>
+<rect class="db" x="650" y="14" width="150" height="40" rx="7"/><text class="dl" x="725" y="38" text-anchor="middle">SAAS / CASB</text>
+<rect class="db" x="650" y="78" width="150" height="40" rx="7"/><text class="dl" x="725" y="102" text-anchor="middle">API</text>
+<rect class="db" x="650" y="142" width="150" height="40" rx="7"/><text class="dl" x="725" y="166" text-anchor="middle">NETWORK</text>
+<path class="df" d="M318,82 C250,60 200,40 172,36"/><path class="df" d="M318,100 C250,130 200,146 172,146"/>
+<path class="df" d="M502,82 C570,60 600,40 648,36"/><path class="df" d="M502,92 C580,96 600,98 648,98"/><path class="df" d="M502,104 C570,140 600,160 648,162"/>
+</svg><figcaption>FIG.01: The five egress channels. Classify once at rest, then enforce consistent policy across every path data can take out.</figcaption></figure>
+
+<p><strong>Endpoint</strong> catches USB copies, printing, and uploads from the device itself. <strong>Email</strong> is still the most common leak path, intentional and accidental. <strong>SaaS</strong> via a CASB catches data moving into and between cloud apps. <strong>API</strong> is the modern blind spot: data flowing through programmatic interfaces that traditional DLP never inspected. <strong>Network</strong> catches the rest at the egress point. The win is a single classification model enforced consistently across all five, so "confidential" means the same thing whether it leaves by USB or API.</p>
+</section>
+
+<section id="tuning"><span class="h2num">// 04</span>
+<h2>Policy tuning and the false-positive war</h2>
+<p>The make-or-break phase. Every DLP program starts noisy; the ones that survive get tuned aggressively in the first ninety days. The method: start in <strong>monitor-only</strong> mode, watch what would have been blocked, and tune until the signal is clean before you ever block anything. Blocking on day one trains the whole company to file exceptions and route around you.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">triage monitor-mode hits to find the noisy policies</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">index=dlp action=would_block
+| stats count BY policy_name, destination_type
+| sort -count</span>
+<span class="out">policy_name              destination_type   count</span>
+<span class="bad">PII-broad                internal_email     8,422</span>  <span class="cmt"># noise: internal</span>
+<span class="bad">PII-broad                self_email           1,191</span>  <span class="cmt"># noise: to self</span>
+<span class="ok">PII-bulk-external        personal_webmail        37</span>  <span class="cmt"># THIS is signal</span>
+<span class="pr">spl&gt;</span> <span class="cmd"># scope PII-broad to external-only; the 37 are worth a human</span></pre></div>
+
+<div class="callout war"><span class="l">The exception that swallows the program</span>
+The fastest way to kill DLP is a broad exception granted under pressure ("just exclude the whole finance team, they keep getting blocked"). Every exception must be narrow, owned, time-boxed, and reviewed. A program that accumulates permanent broad exceptions is a program that protects nothing while generating reports that say it does.</div>
+
+<p>Tune by destination first (internal versus external versus personal cloud), then by volume (one record versus a thousand), then by user context (does this person normally handle this data). Each layer of context strips out a tier of false positives and sharpens what reaches a human.</p>
+</section>
+
+<section id="forensics"><span class="h2num">// 05</span>
+<h2>When you find a real one</h2>
+<p>A confirmed data-exfiltration event is part security incident, part HR matter, part potential legal proceeding, and you do not get to choose which until later. So handle it carefully from the first minute. Preserve the evidence of what left and when, do not tip off the subject if it might be an insider under investigation, and loop in legal and HR early because the wrong move can compromise both the case and your own position.</p>
+
+<div class="callout danger"><span class="l">Legal and HR before action</span>
+With insider data theft especially, what you do in the first hour has legal consequences. Confronting the person, deleting the data, or disabling the account can destroy evidence or violate employment and privacy law. Preserve, document, and escalate to legal and HR before taking visible action. This is one place where the SOC's instinct to "contain immediately" needs a deliberate pause and the right people in the room.</div>
+
+<p>Document the forensic facts dispassionately: what classification of data, how much, which channel, to where, by whom, when, and the evidence chain. The investigation that holds up later is the one where you preserved the trail before you acted on it.</p>
+</section>
+
+<section id="insider"><span class="h2num">// 06</span>
+<h2>Accident, negligence, or malice: three different problems</h2>
+<p>One reason DLP programs feel scattershot is that they lump together three very different kinds of data loss that need very different responses. The well-meaning employee who emails a spreadsheet to their personal account to work over the weekend. The careless one who uploads a sensitive file to a random conversion website without thinking. And the genuinely malicious insider who is deliberately stealing data on their way out the door. Same alert in your console, completely different problem behind it.</p>
+<p>Getting this wrong in either direction is costly. Treat every accidental leak like a malicious theft and you create a culture of fear, drown in process, and train people to route around security. Treat a malicious exfiltration like an honest mistake and you hand your crown jewels to a departing employee with a polite reminder. The skill is distinguishing them quickly, and the signals usually do separate the cases if you look at behavior over time rather than the single event.</p>
+
+<div class="tbl"><table>
+<tr><th>Type</th><th>Behavioral signature</th><th>Right response</th></tr>
+<tr><td>Accidental</td><td>One-off, to self, no concealment, normal hours</td><td>Educate, gently block, move on</td></tr>
+<tr><td>Negligent</td><td>Risky habit repeated, convenience-driven</td><td>Coaching, tighten the easy wrong path</td></tr>
+<tr><td>Malicious</td><td>Staging, concealment, volume, timed to departure</td><td>Quiet investigation, legal and HR first</td></tr>
+</table></div>
+
+<h3>The departure window is when malice concentrates</h3>
+<p>The single highest-signal moment for insider data theft is the weeks around someone leaving, especially a resignation to a competitor or a termination they saw coming. This is when the careful insider makes their move, often grabbing the customer list, the source code, the deal pipeline. A mature program raises its sensitivity for departing employees specifically: tighter monitoring on accounts in a notice period, attention to unusual access of data they do not normally touch, and a clean offboarding that revokes access promptly. Not paranoia about everyone, just appropriate attention at the one moment when the risk genuinely spikes.</p>
+
+<div class="callout war"><span class="l">Watch the behavior, not the person</span>
+Insider risk programs go wrong when they slide into surveillance of individuals based on suspicion rather than monitoring of sensitive-data behavior based on policy. Keep it tied to data and actions, apply it consistently, involve HR and legal in the design, and be transparent that sensitive data is monitored. A program that secretly profiles people is both ethically corrosive and, in many places, legally radioactive. One that consistently watches how sensitive data moves is defensible and effective.</div>
+</section>
+
+<section id="genai"><span class="h2num">// 07</span>
+<h2>The newest leak channel: generative AI</h2>
+<p>Here is the channel that did not exist on most DLP diagrams a couple of years ago and is now one of the fastest-growing exfiltration paths: employees pasting sensitive data into generative AI tools. The intent is almost always benign. Someone drops a block of customer records into a chatbot to summarize it, or pastes proprietary source code in to debug it, or feeds a confidential contract in to get a plain-language explanation. Useful, productive, and a data disclosure to a third party that your traditional DLP channels never watched.</p>
+<p>What makes this hard is that the productivity benefit is real, so blanket-blocking all AI tools just pushes people to their personal devices where you have zero visibility, which is worse. The mature stance treats GenAI as a channel to be governed like any other, not a threat to be banned. That means knowing which tools are in use, routing access through something that can inspect what goes into them, and applying your existing classification policy to that flow: low-sensitivity data moves freely, the crown-jewel categories get blocked or warned at the point of paste.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">surface GenAI usage from proxy logs, a starting inventory</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">index=proxy
+  category="generative-ai" OR dest_host IN (known_ai_domains)
+| stats count sum(bytes_out) AS uploaded BY user, dest_host
+| sort -uploaded</span>
+<span class="out">user          dest_host              count   uploaded</span>
+<span class="warn">eng-team-07   [ai-coding-tool]        412     88 MB   </span><span class="cmt"># a lot of code leaving</span>
+<span class="out">analyst-03    [ai-chat-tool]           96      4 MB</span>
+<span class="cmt"># you cannot govern what you have not measured. inventory first.</span></pre></div>
+
+<div class="callout"><span class="l i">Govern the channel, do not pretend it is not there</span>
+The organizations handling this worst are the ones with an official policy banning AI tools and a workforce using them anyway on personal devices, invisibly. The ones handling it well give people a sanctioned, monitored path for the routine cases and reserve blocking for genuinely sensitive data classes. Shadow AI is the new shadow IT, and the same lesson applies: a usable governed option beats an unusable ban that everyone quietly ignores.</div>
+</section>
+
+<section id="close"><span class="h2num">// 08</span>
+<h2>The honest take</h2>
+<p>DLP has a bad reputation because it is usually done badly: deployed broad, tuned never, ignored quickly. Done well, it is one of the few controls that directly protects the thing you actually care about, the data. The recipe is not complicated. Know what is sensitive. Classify it. Cover every channel it can leave by with one consistent policy. Tune in monitor mode until the signal is clean. Handle real events with legal and HR in the room.</p>
+<p>Narrow and trusted beats broad and ignored. Every time.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Pairs with: the cloud hardening handbook (SaaS and API channels) and the detection engineering handbook (turning DLP signal into tuned alerts).</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // DLP ARCHITECTURE <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive guidance. Involve legal and HR in any insider matter. Not legal advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

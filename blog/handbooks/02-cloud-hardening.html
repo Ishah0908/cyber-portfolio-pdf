@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Security Hardening for AWS, Azure & GCP: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Cloud Defense</span>
+  <h1>Hardening <span class="c">Multi-Cloud</span> Without Grinding Delivery to a Halt</h1>
+  <p class="standfirst">AWS, Azure, and GCP, the way they actually look after three years of teams shipping fast: drifted, over-permissioned, and mostly fine until the one bucket that wasn't. Here is what I lock down first and why.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~35 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#start">Where breaches actually start</a></li>
+<li><a href="#identity">Identity boundaries first</a></li>
+<li><a href="#guardrails">Guardrails over gates</a></li>
+<li><a href="#cnapp">CNAPP and the noise problem</a></li>
+<li><a href="#k8s">Kubernetes runtime reality</a></li>
+<li><a href="#secrets">Secrets that do not leak</a></li>
+<li><a href="#ir">Cloud incident response</a></li>
+<li><a href="#shared">Shared responsibility reality</a></li>
+<li><a href="#close">The short version</a></li>
+</ol></nav>
+
+<section id="start"><span class="h2num">// 01</span>
+<h2>Where cloud breaches actually start</h2>
+<p>Almost none of the cloud incidents I have worked started with a clever exploit. They started with a misconfiguration and an over-broad identity. A public storage bucket. A role with <span class="mono">*:*</span> that someone created "just to unblock the demo" in 2023 and never tightened. A leaked access key in a git history. The attacker did not break in so much as walk through a door that was propped open.</p>
+<p>So this handbook does not chase exotic threats. It hardens the three things that show up in the post-mortems over and over: <strong>identity blast radius, configuration drift, and exposed secrets.</strong> Get those right across all three clouds and you have closed the doors that matter most.</p>
+<div class="callout"><span class="l i">Framing that helps</span>
+In on-prem you defend a network. In cloud you defend an API. Every resource, every action, every deletion is an authenticated API call. That means your control plane logs are your security camera, and your IAM policy is your lock. Treat both accordingly.</div>
+</section>
+
+<section id="identity"><span class="h2num">// 02</span>
+<h2>Identity boundaries first, always</h2>
+<p>The fastest risk reduction in any cloud estate is shrinking what identities can do. Not adding tools. Shrinking permissions. Start by finding the roles that can do anything, because those are your real attack surface.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">aws // find IAM policies granting wildcard admin</span></div>
+<pre><span class="pr">$</span> <span class="cmd">aws iam list-policies --scope Local --query \
+  'Policies[].Arn' --output text | tr '\t' '\n' | while read arn; do
+    ver=$(aws iam get-policy --policy-arn "$arn" \
+      --query 'Policy.DefaultVersionId' --output text)
+    doc=$(aws iam get-policy-version --policy-arn "$arn" \
+      --version-id "$ver" --query 'PolicyVersion.Document' --output json)
+    echo "$doc" | grep -q '"Action": *"\*"' && echo "WILDCARD: $arn"
+  done</span>
+<span class="bad">WILDCARD: arn:aws:iam::1234:policy/demo-unblock-2023</span>
+<span class="bad">WILDCARD: arn:aws:iam::1234:policy/ci-deploy-temp</span>
+<span class="cmt"># every line here is a role that owns your account if stolen</span></pre></div>
+
+<p>Azure and GCP have the same disease with different names. The pattern is identical: enumerate, find the over-broad grant, replace it with least privilege scoped to what the workload actually calls.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">azure + gcp // surface broad role assignments</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># Azure: who holds Owner or Contributor at subscription scope</span>
+<span class="pr">$</span> <span class="cmd">az role assignment list --all \
+  --query "[?roleDefinitionName=='Owner'].{p:principalName,s:scope}" -o table</span>
+<span class="out">PrincipalName              Scope</span>
+<span class="warn">svc-legacy-etl@corp        /subscriptions/8f2...    </span><span class="cmt"># service acct as Owner</span>
+
+<span class="pr">$</span> <span class="cmd"># GCP: project-level primitive roles (owner/editor) are a smell</span>
+<span class="pr">$</span> <span class="cmd">gcloud projects get-iam-policy prod-app \
+  --flatten="bindings[].members" \
+  --filter="bindings.role:roles/owner OR bindings.role:roles/editor" \
+  --format="table(bindings.role, bindings.members)"</span>
+<span class="warn">roles/editor   serviceAccount:deploy@prod-app.iam...</span></pre></div>
+
+<div class="callout danger"><span class="l">The 10:1 problem</span>
+Non-human identities (service accounts, workload identities, CI tokens) outnumber humans roughly ten to one in mature cloud estates, and they are the ones with standing broad access. A human with too much power at least sleeps. A leaked service account key works 24/7. Rotate them, scope them, and prefer short-lived workload identity federation over long-lived keys everywhere you can.</div>
+</section>
+
+<section id="guardrails"><span class="h2num">// 03</span>
+<h2>Guardrails over gates</h2>
+<p>A gate stops people at deploy time and makes them hate you. A guardrail lets them move freely inside a safe boundary and only stops the genuinely dangerous thing. Prevention beats detection here: a policy that makes it <em>impossible</em> to create a public bucket is worth more than an alert that one appeared.</p>
+
+<figure><svg viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.gb{fill:#070d18;stroke:#37d4ff;stroke-width:1.3;rx:8}.gl{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}.gs{font-family:'Share Tech Mono';font-size:9px;fill:#8aa0b8}.gf{stroke:#37d4ff;stroke-width:1.3;fill:none;opacity:.6;marker-end:url(#ga)}</style>
+<marker id="ga" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="gb" x="20" y="70" width="150" height="60" rx="8"/><text class="gl" x="95" y="95" text-anchor="middle">Org Policy</text><text class="gs" x="95" y="112" text-anchor="middle">SCP / Azure Policy</text>
+<rect class="gb" x="220" y="70" width="150" height="60" rx="8"/><text class="gl" x="295" y="95" text-anchor="middle">IaC Scan</text><text class="gs" x="295" y="112" text-anchor="middle">pre-merge in CI</text>
+<rect class="gb" x="420" y="70" width="150" height="60" rx="8"/><text class="gl" x="495" y="95" text-anchor="middle">Admission</text><text class="gs" x="495" y="112" text-anchor="middle">runtime deny</text>
+<rect class="gb" x="620" y="70" width="160" height="60" rx="8"/><text class="gl" x="700" y="95" text-anchor="middle">Drift Detect</text><text class="gs" x="700" y="112" text-anchor="middle">continuous CNAPP</text>
+<path class="gf" d="M170,100 L218,100"/><path class="gf" d="M370,100 L418,100"/><path class="gf" d="M570,100 L618,100"/>
+<text class="gs" x="400" y="40" text-anchor="middle" fill="#ffb648">PREVENT EARLY, DETECT WHAT SLIPS THROUGH</text>
+</svg><figcaption>FIG.01: Layered guardrails. The earlier you stop a bad config, the cheaper it is. Drift detection only catches what the earlier layers missed.</figcaption></figure>
+
+<p>Put the hard boundaries at the org level where no single team can override them, then scan infrastructure-as-code before merge so problems never reach an account.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">aws // org-level SCP: deny disabling of guardrails</span></div>
+<pre><span class="out">{
+  </span><span class="pr">"Sid"</span><span class="out">: </span><span class="ok">"DenyTurningOffSecurity"</span><span class="out">,
+  </span><span class="pr">"Effect"</span><span class="out">: </span><span class="ok">"Deny"</span><span class="out">,
+  </span><span class="pr">"Action"</span><span class="out">: [
+    </span><span class="ok">"cloudtrail:StopLogging"</span><span class="out">,
+    </span><span class="ok">"guardduty:DeleteDetector"</span><span class="out">,
+    </span><span class="ok">"config:DeleteConfigurationRecorder"</span><span class="out">,
+    </span><span class="ok">"s3:PutBucketPublicAccessBlock"</span><span class="out">
+  ],
+  </span><span class="pr">"Resource"</span><span class="out">: </span><span class="ok">"*"</span><span class="out">
+}</span>
+<span class="cmt"># now no account in the org can blind your logging or open a bucket</span></pre></div>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">scan IaC before it ever deploys</span></div>
+<pre><span class="pr">$</span> <span class="cmd">checkov -d ./terraform --compact --quiet</span>
+<span class="out">terraform scan results:</span>
+<span class="ok">Passed checks: 142</span>  <span class="bad">Failed checks: 3</span>
+<span class="bad">FAILED  CKV_AWS_18  s3 bucket has no access logging  aws_s3_bucket.assets</span>
+<span class="bad">FAILED  CKV_AWS_20  s3 bucket allows public read       aws_s3_bucket.assets</span>
+<span class="pr">$</span> <span class="cmd"># wire this as a required CI check; a red here blocks the merge</span></pre></div>
+</section>
+
+<section id="cnapp"><span class="h2num">// 04</span>
+<h2>CNAPP and the noise problem</h2>
+<p>A cloud-native application protection platform will, on day one, hand you ten thousand findings and a feeling of despair. The platform is not the hard part. The hard part is turning that wall of severity-colored noise into the five things that actually matter this week.</p>
+<p>The trick is to stop reading findings as a flat list and start reading them as <strong>attack paths</strong>. One internet-exposed VM is a finding. One internet-exposed VM with a known CVE, holding a token to a role that can read the customer database, is an attack path. The second one is what you fix today. Modern CNAPP tools can compute this; insist on it and triage by reachable blast radius, not raw CVSS.</p>
+<div class="callout war"><span class="l">Anti-pattern</span>
+Triaging cloud findings purely by CVSS score. A 9.8 on an isolated host with no sensitive access is less urgent than a 6.5 on the box that can reach your crown jewels. Severity without reachability and blast radius is just a number that makes dashboards look busy.</div>
+
+<h3>How I actually triage ten thousand findings</h3>
+<p>The first time a CNAPP lights up, the instinct is to sort by severity and start at the top. That is how teams burn a quarter fixing critical findings on assets nobody can reach while the real attack path sits at medium. The triage that works asks three questions in order, and a finding has to clear all three to jump the queue. Is it reachable from somewhere an attacker actually is, usually the internet or a low-trust zone. Does the affected thing hold or can it reach something sensitive, real data or a powerful identity. And is it exploitable in practice, not just theoretically present. A finding that is reachable, sensitive, and exploitable is a five-alarm fire regardless of its CVSS number. A critical CVE that fails any of the three can wait for the patch cycle.</p>
+<p>The reason this works is that attackers do not think in findings, they think in paths. They chain a foothold to a credential to a permission to a data store. The job of a modern CNAPP is to compute those chains for you, and the job of the human is to break the chain at its cheapest link. Often that is not patching the exposed box at all, it is removing the over-broad permission three hops in, which kills a dozen paths at once.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">read findings as a path, not a list (illustrative graph query)</span></div>
+<pre><span class="pr">&gt;</span> <span class="cmd">MATCH path = (e:Exposed {internet:true})
+        -[:RUNS]-&gt;(w:Workload)
+        -[:ASSUMES]-&gt;(r:Role)
+        -[:CAN_READ]-&gt;(d:DataStore {sensitivity:'high'})
+  WHERE w.has_known_cve = true
+  RETURN path LIMIT 5</span>
+<span class="bad">web-edge-02 -[runs]-&gt; api-svc -[assumes]-&gt; data-reader -[reads]-&gt; customers-db</span>
+<span class="cmt"># one internet box, two hops, your customer data. fix the hop,</span>
+<span class="cmt"># not just the box. removing data-reader from api-svc kills it.</span></pre></div>
+</section>
+
+<section id="k8s"><span class="h2num">// 05</span>
+<h2>Kubernetes runtime reality</h2>
+<p>Kubernetes is where cloud security gets genuinely hard, because the cluster is a second cloud running inside your cloud, with its own identity system, network, and admission control. Three things earn their keep before anything fancy.</p>
+<p><strong>One: kill privileged and root containers.</strong> A container running as root with host mounts is one escape from owning the node. Enforce it with a policy engine at admission so it is impossible, not merely discouraged.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">find running pods that are privileged or root</span></div>
+<pre><span class="pr">$</span> <span class="cmd">kubectl get pods -A -o json | jq -r '
+  .items[] | select(
+    .spec.containers[].securityContext.privileged == true or
+    .spec.containers[].securityContext.runAsNonRoot != true
+  ) | "\(.metadata.namespace)/\(.metadata.name)"' | sort -u</span>
+<span class="warn">payments/legacy-batch-7f9c</span>   <span class="cmt"># privileged: true</span>
+<span class="warn">default/debug-shell</span>         <span class="cmt"># someone left this here</span>
+<span class="pr">$</span> <span class="cmd"># then enforce so new ones cannot be created:</span></pre></div>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">admission policy: deny privileged pods (Kyverno)</span></div>
+<pre><span class="out">apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: { name: disallow-privileged }
+spec:
+  validationFailureAction: </span><span class="ok">Enforce</span><span class="out">
+  rules:
+  - name: no-privileged
+    match: { any: [{ resources: { kinds: [Pod] } }] }
+    validate:
+      message: </span><span class="ok">"privileged containers are not allowed"</span><span class="out">
+      pattern:
+        spec:
+          containers:
+          - securityContext:
+              privileged: </span><span class="ok">"false"</span></pre></div>
+
+<p><strong>Two: default-deny network policy.</strong> Out of the box, every pod can talk to every other pod. That is flat-network east-west all over again, just inside the cluster. <strong>Three: runtime detection.</strong> Watch for the syscalls that mean someone is doing something they should not, like a shell spawning inside a container that should only ever run a single process.</p>
+
+<h3>The mistakes that actually get clusters owned</h3>
+<p>In practice, the cluster compromises I have seen did not come from exotic Kubernetes CVEs. They came from boring identity and boundary mistakes. The big one is the over-permissioned service account: a pod with a token mounted that can talk to the API server with far more rights than the app needs, so when the app is popped, the attacker inherits cluster power. By default Kubernetes mounts a service account token into every pod whether the app uses it or not, which is free credential material for anyone who lands code execution.</p>
+<p>The second is treating the control plane and the workloads as one trust zone. The cluster is multi-tenant infrastructure even if you think of it as one app's home, and a container escape should not equal cluster admin. The third is forgetting that the cloud IAM layer and the Kubernetes RBAC layer are two separate permission systems that meet at the workload-identity boundary, and an attacker who pivots from one to the other often finds the join carelessly broad.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">stop auto-mounting tokens where the app does not need them</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># find pods that have the API token mounted but probably don't use it</span>
+<span class="pr">$</span> <span class="cmd">kubectl get pods -A -o json | jq -r '
+  .items[] | select(.spec.automountServiceAccountToken != false)
+  | "\(.metadata.namespace)/\(.metadata.name)"' | head</span>
+<span class="warn">frontend/web-7d9   (token mounted; static site, needs no API access)</span>
+<span class="pr">$</span> <span class="cmd"># set automountServiceAccountToken: false on the SA or pod spec</span>
+<span class="ok">  one less credential for an attacker to pick up on escape</span></pre></div>
+
+<div class="callout"><span class="l i">Two permission systems, one boundary</span>
+Cloud IAM and Kubernetes RBAC are different worlds with different models, and the place they connect, your workload identity binding, is where the dangerous over-grant usually hides. Audit that join specifically. A pod's Kubernetes RBAC might be tight while its bound cloud role can read every bucket in the account. The attacker does not care which system granted the access; they care that the path exists.</div>
+</section>
+
+<section id="secrets"><span class="h2num">// 06</span>
+<h2>Secrets that do not leak</h2>
+<p>The leaked secret is the most boring and most common cloud breach vector, and it is almost entirely preventable. Two rules. <strong>Never put a secret in code, config, or an environment variable that lands in an image.</strong> Use a managed secrets store and fetch at runtime. <strong>And scan your git history</strong>, because the secret you rotated is still sitting in commit 4a3f from last spring.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">scan a repo and its full history for secrets</span></div>
+<pre><span class="pr">$</span> <span class="cmd">gitleaks detect --source . --redact -v</span>
+<span class="out">Finding:     AWS Access Key</span>
+<span class="bad">Secret:      AKIA****************</span>
+<span class="out">File:        deploy/old_config.py</span>
+<span class="out">Commit:      4a3f9c2  (2025-04-11)</span>
+<span class="bad">leaks found: 1</span>
+<span class="pr">$</span> <span class="cmd"># rotate the key NOW, then purge history; rotation first, always</span></pre></div>
+
+<p>Prefer short-lived credentials over stored ones entirely. Workload identity federation lets a CI job or a pod assume a cloud role with a token that lives for minutes, so there is no long-lived key to leak in the first place. That is the real fix; secret scanning is the safety net under it.</p>
+</section>
+
+<section id="ir"><span class="h2num">// 07</span>
+<h2>Cloud incident response, when it goes wrong anyway</h2>
+<p>When something does happen in cloud, the moves are different from on-prem. You rarely pull a network cable. You isolate by changing API permissions and snapshotting evidence before anything is destroyed. The first instinct of a panicking engineer, to terminate the compromised instance, is usually wrong, because it destroys the forensic evidence.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">aws // contain a compromised instance without destroying evidence</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># 1. snapshot the disk for forensics BEFORE touching anything</span>
+<span class="pr">$</span> <span class="cmd">aws ec2 create-snapshot --volume-id vol-0abc \
+  --description "IR-2026-06-forensic" --tag-specifications \
+  'ResourceType=snapshot,Tags=[{Key=incident,Value=IR-2026-06}]'</span>
+<span class="ok">SnapshotId: snap-0def  State: pending</span>
+
+<span class="pr">$</span> <span class="cmd"># 2. isolate with a quarantine security group (deny all)</span>
+<span class="pr">$</span> <span class="cmd">aws ec2 modify-instance-attribute --instance-id i-0abc \
+  --groups sg-quarantine</span>
+<span class="ok">  instance isolated, still running for memory capture</span>
+
+<span class="pr">$</span> <span class="cmd"># 3. revoke the instance role's sessions (cut the token's power)</span>
+<span class="pr">$</span> <span class="cmd">aws iam put-role-policy --role-name app-role \
+  --policy-name revoke-now --policy-document file://deny-all.json</span>
+<span class="ok">  standing sessions for that role now denied</span></pre></div>
+
+<div class="callout"><span class="l i">Pre-write the runbook</span>
+The middle of an incident is the worst time to figure out the AWS CLI flags for snapshotting a volume. Write and rehearse these runbooks in a game day before you need them. The teams that recover fast are the ones who have done it on a calm Tuesday afternoon already.</div>
+</section>
+
+<section id="shared"><span class="h2num">// 08</span>
+<h2>The shared-responsibility line, and where teams fall off it</h2>
+<p>Every cloud provider hands you a shared-responsibility diagram, and almost everyone nods at it without internalizing the one thing that matters: the line moves depending on which service you use, and the most expensive mistakes happen where a team assumes the provider has them covered when it does not. The provider secures the cloud. You secure what you put in it. Simple to say, constantly misread in practice.</p>
+<p>The misreads cluster in predictable places. With managed databases, people assume the provider handles access control because it handles patching and uptime; it does not, the public-exposure setting and the IAM around it are yours. With serverless, people assume there is nothing to secure because there is no server; the function's permissions, dependencies, and the data it touches are all yours. With managed Kubernetes, the provider runs the control plane but every workload, network policy, and RBAC binding is yours. The pattern is always the same: the more managed the service feels, the more tempting it is to assume security came bundled, and the more surprised the team is at the breach review.</p>
+
+<div class="tbl"><table>
+<tr><th>Service type</th><th>Provider handles</th><th>You still own (where breaches happen)</th></tr>
+<tr><td>IaaS (VMs)</td><td>Hypervisor, physical, network fabric</td><td>OS patching, firewall rules, IAM, data</td></tr>
+<tr><td>Managed DB</td><td>Patching, backups, uptime</td><td>Public exposure, access control, encryption choices</td></tr>
+<tr><td>Serverless</td><td>Runtime, scaling, host</td><td>Function permissions, dependencies, input validation</td></tr>
+<tr><td>Managed K8s</td><td>Control plane availability</td><td>Workloads, RBAC, network policy, node config</td></tr>
+<tr><td>SaaS</td><td>Almost everything technical</td><td>Your configuration, your data, who you grant access</td></tr>
+</table></div>
+
+<h3>Multi-cloud multiplies the line, it does not average it</h3>
+<p>Running three clouds does not give you one shared-responsibility model, it gives you three, each drawn slightly differently, plus the cognitive load of remembering which is which. The teams that handle multi-cloud well do not try to master each provider's quirks equally. They define their own security baseline in provider-neutral terms, the outcomes they require regardless of cloud, then map each cloud's specific controls up to that baseline. Encrypt sensitive data at rest is the requirement; the specific service and flag that achieves it differs per cloud and is an implementation detail. That inversion, requirements first and provider controls second, is what keeps a multi-cloud program coherent instead of three disconnected silos that each think the others have it handled.</p>
+
+<div class="callout danger"><span class="l">The "I thought the cloud did that" breach</span>
+The single most common cloud breach narrative in post-mortems is some version of "we assumed the provider handled it." A storage bucket left public because someone thought the default was private. A database reachable from the internet because uptime was managed so surely security was too. Read the responsibility line for every service you adopt, out loud, in the design review. The provider will not save you from a door you opened yourself, and their diagram already told you it was your door.</div>
+</section>
+
+<section id="close"><span class="h2num">// 09</span>
+<h2>The short version</h2>
+<p>If you do nothing else across your three clouds, do these. Shrink identity blast radius by hunting wildcard permissions and killing standing service-account keys. Put hard guardrails at the org level so the dangerous config is impossible, not merely flagged. Scan IaC before merge and git history for secrets, and move to short-lived credentials so there is less to leak. Treat your control-plane logs as the security camera they are, and pre-write your IR runbooks.</p>
+<p>None of this is exotic. The exotic stuff almost never gets you. The propped-open door does.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Companion handbooks: SIEM/SOAR detection engineering, endpoint threat hunting, and IAM/PAM/IGA go deeper on the detection and identity layers referenced here.</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // CLOUD HARDENING <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive guidance. Test every command in a non-production account first. Not legal or compliance advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

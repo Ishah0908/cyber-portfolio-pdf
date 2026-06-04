@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Handbooks // Ibrahim Sultan</title>
+<style>
+  .hero-idx{padding:110px 0 40px;text-align:center;position:relative}
+  .hero-idx .kicker{display:block;margin-bottom:18px}
+  .hero-idx h1{font-family:'Orbitron';font-weight:900;font-size:clamp(34px,6vw,68px);color:#fff;letter-spacing:-.5px;text-shadow:0 0 28px rgba(55,212,255,.35);line-height:1.02}
+  .hero-idx h1 .c{color:var(--hud)}
+  .hero-idx p{max-width:60ch;margin:20px auto 0;color:var(--ink-dim);font-size:19px;font-style:italic}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;padding:30px 0 80px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+  .card{display:block;text-decoration:none;border:1px solid var(--hud-faint);border-radius:12px;background:var(--panel);
+    padding:26px;transition:.22s;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--hud);box-shadow:0 0 10px var(--hud);opacity:.5;transition:.22s}
+  .card:hover{transform:translateY(-4px);border-color:var(--hud);box-shadow:0 0 30px -10px var(--hud)}
+  .card:hover::before{opacity:1}
+  .card .no{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:2px}
+  .card h3{font-family:'Orbitron';font-weight:700;font-size:20px;color:#fff;margin:10px 0 8px;line-height:1.12}
+  .card p{font-size:14px;color:var(--ink-dim);line-height:1.55}
+  .card .meta{font-family:'Share Tech Mono';font-size:11px;color:var(--gold);letter-spacing:1px;margin-top:14px;display:flex;gap:14px;flex-wrap:wrap}
+  .card.feat{grid-column:1 / -1;background:linear-gradient(110deg,rgba(58,215,255,.08),var(--panel))}
+  .card.feat h3{font-size:26px}
+  .intro{border:1px solid var(--hud-faint);border-radius:12px;background:var(--panel);padding:24px 28px;margin:10px 0 20px}
+  .intro p{margin:8px 0;font-size:16px;color:var(--ink)}
+  .intro .mono{color:var(--hud-dim);font-size:13px}
+</style>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+
+<div class="wrap">
+  <section class="hero-idx">
+    <span class="kicker">Ibrahim Sultan // Cybersecurity Engineer</span>
+    <h1>Field <span class="c">Handbooks</span></h1>
+    <p>Defensive security, written the way it actually works in the field. No vendor slides, no filler. Just what earns its place when you are the one on the hook.</p>
+  </section>
+
+  <div class="intro">
+    <p>Seven handbooks, each a standalone read. They cross-reference each other, but you can start anywhere. Every command is real and meant to be lab-tested before you trust it; every diagram is built to be understood, not to fill space.</p>
+    <p class="mono">&gt; start with Zero Trust if you want the spine that ties the rest together.</p>
+  </div>
+
+  <div class="grid">
+    <a class="card feat" href="01-zero-trust.html">
+      <span class="no">01 // FOUNDATIONAL</span>
+      <h3>Building Zero Trust in a Fortune 500 Hybrid Environment</h3>
+      <p>The campaign to remove implicit trust one assumption at a time. PDP/PEP architecture, identity as the new perimeter, microsegmentation without the meltdown, a phased rollout that survives contact, and the anti-patterns that sink programs.</p>
+      <div class="meta"><span>~40 MIN</span><span>11 SECTIONS</span><span>NIST CSF 2.0 + ATT&amp;CK</span></div>
+    </a>
+
+    <a class="card" href="02-cloud-hardening.html">
+      <span class="no">02 // CLOUD</span>
+      <h3>Multi-Cloud Hardening: AWS, Azure &amp; GCP</h3>
+      <p>Identity blast radius, guardrails over gates, CNAPP without the noise, Kubernetes runtime reality, secrets that do not leak, and cloud incident response that preserves evidence.</p>
+      <div class="meta"><span>~35 MIN</span><span>8 SECTIONS</span></div>
+    </a>
+
+    <a class="card" href="03-siem-soar.html">
+      <span class="no">03 // DETECTION</span>
+      <h3>SIEM &amp; SOAR Detection Engineering</h3>
+      <p>Detection as a product with a lifecycle. Telemetry normalization, ATT&amp;CK-driven content, correlation patterns that work, SOAR decision gates, and how to actually test that your detections fire.</p>
+      <div class="meta"><span>~35 MIN</span><span>8 SECTIONS</span></div>
+    </a>
+
+    <a class="card" href="04-endpoint-hunting.html">
+      <span class="no">04 // HUNTING</span>
+      <h3>Endpoint Security &amp; Threat Hunting</h3>
+      <p>Finding what your alerts miss. Hunt hypotheses, living-off-the-land tradecraft, a ransomware playbook, evidence standards, and cross-platform investigative commands for Linux, macOS, and Windows.</p>
+      <div class="meta"><span>~38 MIN</span><span>8 SECTIONS</span></div>
+    </a>
+
+    <a class="card" href="05-iam-pam-iga.html">
+      <span class="no">05 // IDENTITY</span>
+      <h3>IAM, PAM &amp; IGA at Scale</h3>
+      <p>The joiner-mover-leaver lifecycle, separation of duties, privileged session governance, phishing-resistant MFA, identity detection use-cases, and surviving the access audit.</p>
+      <div class="meta"><span>~32 MIN</span><span>8 SECTIONS</span></div>
+    </a>
+
+    <a class="card" href="06-dlp-architecture.html">
+      <span class="no">06 // DATA</span>
+      <h3>Data Loss Prevention Architecture</h3>
+      <p>Stopping real leaks without drowning in false positives. Classification first, the five egress channels, policy tuning in monitor mode, and handling a confirmed leak with legal and HR in the room.</p>
+      <div class="meta"><span>~30 MIN</span><span>6 SECTIONS</span></div>
+    </a>
+
+    <a class="card" href="07-sase-ztna.html">
+      <span class="no">07 // EDGE</span>
+      <h3>SASE &amp; ZTNA, Without the Hype</h3>
+      <p>The acronym soup translated. SD-WAN, SWG, CASB, FWaaS, inline DLP, and ZTNA: what each does, when it earns its place, and how to migrate off the VPN without a revolt.</p>
+      <div class="meta"><span>~32 MIN</span><span>6 SECTIONS</span></div>
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="rule"></div>
+  <p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOKS <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+  <p style="margin-top:8px;opacity:.6">All content is defensive security guidance. Lab-test every command before production. Nothing here is legal or compliance advice.</p>
+</footer>
+
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

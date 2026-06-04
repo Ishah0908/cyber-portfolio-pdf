@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASE & ZTNA Design and Operations: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Edge &amp; Access</span>
+  <h1>SASE &amp; ZTNA <span class="c">Without the Hype</span></h1>
+  <p class="standfirst">The acronym soup of the network-security edge, translated into what each piece does, when it earns its place, and how to migrate off the VPN without a revolt. SD-WAN, SWG, CASB, FWaaS, DLP, and ZTNA, in plain terms.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~32 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#why">What problem SASE solves</a></li>
+<li><a href="#soup">The acronym soup, translated</a></li>
+<li><a href="#ztna">ZTNA vs the VPN</a></li>
+<li><a href="#migrate">Migrating off the VPN</a></li>
+<li><a href="#ops">Operations &amp; troubleshooting</a></li>
+<li><a href="#vendor">Single vendor or best of breed</a></li>
+<li><a href="#pitfalls">How SASE programs go wrong</a></li>
+<li><a href="#close">What to actually buy</a></li>
+</ol></nav>
+
+<section id="why"><span class="h2num">// 01</span>
+<h2>What problem SASE actually solves</h2>
+<p>SASE (Secure Access Service Edge) exists because the old model broke. That model backhauled every remote user's traffic through a corporate data center to apply security, then sent it back out to the internet. When the apps lived in the data center, that was fine. Now the apps live in the cloud and the users live at home, and hairpinning their Zoom traffic through headquarters to inspect it is slow, expensive, and pointless.</p>
+<p>SASE flips it: move the security controls to the cloud edge, close to the user, and inspect traffic there instead of backhauling. It is less a product than a <strong>convergence of networking and security functions into one cloud-delivered layer.</strong> The value is real; the marketing is overheated. Your job is separating the two.</p>
+<div class="callout"><span class="l i">SASE is a journey, not a SKU</span>
+No single purchase makes you "SASE." It is a target architecture you converge toward, often over years, frequently from multiple vendors. Anyone selling you SASE-in-a-box is selling the marketing. Buy the capabilities you need in the order your risk demands.</div>
+</section>
+
+<section id="soup"><span class="h2num">// 02</span>
+<h2>The acronym soup, translated</h2>
+<p>Every SASE deck throws the same letters at you. Here is what each one actually does and the question it answers.</p>
+
+<div class="tbl"><table>
+<tr><th>Component</th><th>What it does</th><th>The question it answers</th></tr>
+<tr><td><span class="tag">SD-WAN</span></td><td>Smart routing across links</td><td>How does traffic get there fast and reliably?</td></tr>
+<tr><td><span class="tag">SWG</span></td><td>Secure web gateway: inspects web traffic</td><td>Is this website / download safe?</td></tr>
+<tr><td><span class="tag">CASB</span></td><td>Cloud access security broker</td><td>What are users doing in our SaaS apps?</td></tr>
+<tr><td><span class="tag">FWaaS</span></td><td>Firewall as a service, cloud-delivered</td><td>Firewall rules without a box, everywhere</td></tr>
+<tr><td><span class="tag">DLP</span></td><td>Data loss prevention, inline</td><td>Is sensitive data leaving?</td></tr>
+<tr><td><span class="tag">ZTNA</span></td><td>Zero Trust network access</td><td>Should this identity reach this app, right now?</td></tr>
+</table></div>
+
+<p>The thing the deck will not tell you: you rarely need all of them on day one. Most organizations get the biggest risk reduction from <strong>ZTNA</strong> (replacing the VPN) and <strong>SWG</strong> (inspecting web and blocking the obvious bad), then layer in CASB and inline DLP as the data-protection program matures. Buy to your risk, not to the diagram.</p>
+</section>
+
+<section id="ztna"><span class="h2num">// 03</span>
+<h2>ZTNA versus the VPN it replaces</h2>
+<p>ZTNA is the piece worth understanding deepest, because it is the direct application of Zero Trust to remote access and it fixes the VPN's original sin. A VPN, once you connect, drops you onto the network. You are inside. From there you can often see and reach far more than the one app you needed, which is exactly how a compromised remote user becomes a lateral-movement problem.</p>
+<p>ZTNA inverts this. Instead of connecting you to a network, it brokers access to a <em>specific application</em>, after checking identity and device posture, and the app is never exposed to the network at all. You never get "inside." You get a tunnel to exactly the one resource policy allows, re-evaluated continuously.</p>
+
+<figure><svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.zb{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.zr{fill:rgba(255,93,108,.07);stroke:#ff5d6c;stroke-width:1.2;rx:7}.zg{fill:rgba(94,243,140,.07);stroke:#5ef38c;stroke-width:1.2;rx:7}.zl{font-family:'Orbitron';font-size:11px;font-weight:700;fill:#fff}.zs{font-family:'Share Tech Mono';font-size:8px;fill:#8aa0b8}.zf{stroke:#37d4ff;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#za)}.zfb{stroke:#ff5d6c;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#zab)}</style>
+<marker id="za" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker>
+<marker id="zab" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ff5d6c"/></marker></defs>
+<text class="zs" x="20" y="24" fill="#ff5d6c">OLD: VPN drops you on the whole network</text>
+<rect class="zb" x="20" y="34" width="90" height="36" rx="7"/><text class="zl" x="65" y="56" text-anchor="middle">User</text>
+<rect class="zr" x="200" y="20" width="300" height="64" rx="7"/><text class="zl" x="350" y="44" text-anchor="middle" fill="#ff5d6c">FLAT NETWORK</text><text class="zs" x="350" y="62" text-anchor="middle">app + db + everything reachable</text>
+<path class="zfb" d="M110,52 L198,52"/>
+<text class="zs" x="20" y="124" fill="#5ef38c">NEW: ZTNA brokers one app, network invisible</text>
+<rect class="zb" x="20" y="134" width="90" height="36" rx="7"/><text class="zl" x="65" y="156" text-anchor="middle">User</text>
+<rect class="zb" x="200" y="128" width="110" height="48" rx="7"/><text class="zl" x="255" y="150" text-anchor="middle">ZTNA</text><text class="zs" x="255" y="166" text-anchor="middle">id + posture check</text>
+<rect class="zg" x="400" y="128" width="110" height="48" rx="7"/><text class="zl" x="455" y="150" text-anchor="middle" fill="#5ef38c">ONE APP</text><text class="zs" x="455" y="166" text-anchor="middle">only this</text>
+<rect class="zb" x="560" y="128" width="120" height="48" rx="7"/><text class="zl" x="620" y="150" text-anchor="middle">other apps</text><text class="zs" x="620" y="166" text-anchor="middle">invisible</text>
+<path class="zf" d="M110,152 L198,152"/><path class="zf" d="M310,152 L398,152"/>
+</svg><figcaption>FIG.01: The VPN connects you to a network; ZTNA brokers you to a single application and keeps everything else dark. That difference is the whole point.</figcaption></figure>
+</section>
+
+<section id="migrate"><span class="h2num">// 04</span>
+<h2>Migrating off the VPN without a revolt</h2>
+<p>The VPN cutover is where SASE projects generate the most pain, because the VPN is load-bearing and everyone notices when remote access breaks. The migration that works is gradual and app-by-app, running ZTNA and VPN in parallel until the VPN has nothing left to do.</p>
+
+<div class="tbl"><table>
+<tr><th>Stage</th><th>Move</th><th>Why this order</th></tr>
+<tr><td>1</td><td>Stand up ZTNA beside the VPN, pick 2-3 pilot apps</td><td>Prove it with low-risk apps and friendly users</td></tr>
+<tr><td>2</td><td>Migrate the most-used internal web apps</td><td>Biggest user-experience win, builds goodwill</td></tr>
+<tr><td>3</td><td>Migrate thick-client and legacy apps</td><td>Hardest cases, do them once you have momentum</td></tr>
+<tr><td>4</td><td>Shrink VPN to remaining edge cases, then retire</td><td>VPN dies when its app list hits zero</td></tr>
+</table></div>
+
+<div class="callout war"><span class="l">Do not flip everyone at once</span>
+The temptation is a hard cutover on a weekend. Resist it. A bad ZTNA policy that blocks a critical app for the whole company on a Monday morning will set the program back a year in political capital. Migrate per app, keep the VPN as the fallback until each app is proven, and communicate every step.</div>
+
+<p>One operational detail that saves you: instrument the user experience from day one. The fastest way to lose support for a ZTNA rollout is users quietly deciding it is slower than the VPN, even when it is not. Measure connection time and app latency, and have the data ready when someone claims it got worse.</p>
+</section>
+
+<section id="ops"><span class="h2num">// 05</span>
+<h2>Operations and troubleshooting</h2>
+<p>Once SASE is live, the operational challenge shifts. When something is slow or broken, the failure could be in the user's local network, the SASE edge, the policy, or the app. A structured troubleshooting path saves hours of finger-pointing between teams and vendors.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">isolate where the slowness lives, layer by layer</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># 1. is it the user's path to the nearest SASE PoP?</span>
+<span class="pr">$</span> <span class="cmd">mtr -rwc 50 &lt;sase-pop-edge&gt;</span>
+<span class="out">  loss%   avg   host</span>
+<span class="ok">  0.0%    12ms  sase-pop-dfw   </span><span class="cmt"># clean path to the edge</span>
+
+<span class="pr">$</span> <span class="cmd"># 2. is the policy adding latency, or is the app itself slow?</span>
+<span class="pr">$</span> <span class="cmd">curl -w "dns:%{time_namelookup} conn:%{time_connect} ttfb:%{time_starttransfer}\n" \
+  -o /dev/null -s https://internal-app.via-ztna</span>
+<span class="out">dns:0.03 conn:0.08 </span><span class="warn">ttfb:2.41</span>
+<span class="cmt"># fast to connect, slow first byte = the app/origin is the problem,</span>
+<span class="cmt"># not the SASE layer. point the finger at the right team.</span></pre></div>
+
+<div class="callout"><span class="l i">The troubleshooting order</span>
+Always isolate in this order: local network, then path to the SASE edge, then policy evaluation, then origin app. Most "SASE is slow" tickets turn out to be a saturated home wifi or a slow origin app, not the edge. Having the data to show that quickly is what keeps the SASE team out of every unrelated performance war.</div>
+</section>
+
+<section id="vendor"><span class="h2num">// 06</span>
+<h2>Single vendor or best of breed</h2>
+<p>This is the strategic fork every SASE program hits, and the vendors have strong opinions because their revenue depends on your answer. The single-vendor pitch is one console, one policy model, one support number, tightly integrated components that were built to work together. The best-of-breed pitch is the strongest tool in each category, no compromise on the part that matters most to you, no lock-in to one company's roadmap. Both are real arguments. Neither is universally correct.</p>
+<p>The honest tradeoff: single-vendor SASE genuinely reduces operational complexity, and complexity is itself a security risk, so that simplicity has real defensive value. But you accept that some components will be merely adequate rather than excellent, and you concentrate your risk in one vendor's competence, pricing power, and the blast radius of their outages and breaches. Best-of-breed gets you the sharpest tool per category and avoids that concentration, but you pay in integration work, multiple policy models that can disagree, and the finger-pointing that happens when something breaks across a seam between two vendors.</p>
+
+<div class="tbl"><table>
+<tr><th>Dimension</th><th>Single vendor</th><th>Best of breed</th></tr>
+<tr><td>Operational complexity</td><td>Lower, one console</td><td>Higher, multiple seams</td></tr>
+<tr><td>Capability per component</td><td>Adequate to good</td><td>Best available</td></tr>
+<tr><td>Risk concentration</td><td>High, one basket</td><td>Spread across vendors</td></tr>
+<tr><td>Integration burden</td><td>Vendor handles it</td><td>You own the seams</td></tr>
+<tr><td>Negotiating leverage</td><td>Weak, locked in</td><td>Stronger, swappable</td></tr>
+</table></div>
+
+<p>My practical guidance: most organizations are better served leaning toward consolidation for the components where "good enough and well-integrated" beats "best but bolted on," while staying willing to break out the one or two capabilities where they have a genuine, specific requirement that the suite cannot meet. Let your actual risk drive the exceptions rather than buying best-of-breed everywhere out of principle or single-vendor everywhere out of convenience. And whatever you choose, keep enough portability that you are never truly hostage to one renewal conversation.</p>
+</section>
+
+<section id="pitfalls"><span class="h2num">// 07</span>
+<h2>How SASE programs quietly go wrong</h2>
+<p>Beyond the architecture, there are recurring ways these programs disappoint, and they are rarely the things the design review worried about. Knowing them in advance is cheap insurance.</p>
+
+<h4>The latency surprise</h4>
+<p>Routing traffic through a cloud edge instead of straight out can add latency if a user is far from the nearest point of presence, and a handful of vocal users in an underserved region can sour the whole organization's perception. Check the provider's point-of-presence map against where your people actually are before you sign, not after the complaints start.</p>
+
+<h4>The encrypted-traffic blind spot</h4>
+<p>A SWG that does not decrypt and inspect TLS sees almost nothing, because nearly all traffic is encrypted now. But decryption is operationally heavy, breaks certificate-pinned apps, and raises real privacy questions you have to answer for your workforce and possibly your works council. Teams that skip the hard decryption conversation end up with an expensive inspection layer that inspects nothing.</p>
+
+<h4>The policy sprawl that recreates the old mess</h4>
+<p>The promise of SASE is unified policy. The reality, a couple of years in, is often hundreds of accreted rules that nobody fully understands, which is exactly the firewall-rule swamp you were trying to escape, just relocated to the cloud. Manage SASE policy as code with review and periodic pruning, or it rots the same way every rule base before it did.</p>
+
+<div class="callout danger"><span class="l">You moved the single point of failure, you did not remove it</span>
+The most important thing to internalize operationally: when your security and connectivity both run through a cloud edge, that edge becomes critical infrastructure for your entire workforce. If it has a bad day, everyone is affected at once, not just one site. Understand the provider's resilience model, know what your failure mode is when the edge is unreachable (fail-open and exposed, or fail-closed and unable to work), and make that a deliberate decision rather than a discovery you make during their next outage.</div>
+</section>
+
+<section id="close"><span class="h2num">// 08</span>
+<h2>What to actually buy, and when</h2>
+<p>Cut through the convergence marketing with a simple sequence. Start with <strong>ZTNA</strong> to kill the VPN and shrink your remote-access blast radius, because that is the biggest single risk reduction. Add a <strong>SWG</strong> to inspect web traffic and block the obvious threats. Layer in <strong>CASB</strong> once you care about what happens inside your SaaS apps, and <strong>inline DLP</strong> as your data-protection program matures. SD-WAN and FWaaS slot in based on your networking refresh cycle, not on a vendor's roadmap.</p>
+<p>You do not have to buy the whole diagram, and you should not buy it from one vendor just because the slide shows it as one box. Converge toward the architecture at the pace your risk and your budget actually justify. The VPN replacement alone will pay for itself in reduced lateral-movement risk; everything after that is incremental.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Pairs with: the Zero Trust handbook (ZTNA is its access arm), the DLP handbook (inline DLP here), and the cloud hardening handbook (where the apps you are brokering actually live).</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // SASE &amp; ZTNA <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive architecture guidance. Validate designs against your own requirements. Not legal or vendor advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

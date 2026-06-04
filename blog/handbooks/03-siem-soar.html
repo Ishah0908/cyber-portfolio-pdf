@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIEM & SOAR Detection Engineering: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Detection Engineering</span>
+  <h1>Detection Engineering That <span class="c">Catches Things</span>, Not Just Logs Them</h1>
+  <p class="standfirst">A SIEM full of rules nobody trusts is worse than no SIEM, because it costs money and breeds alert fatigue. Here is how I build detections as a product with a lifecycle, tie them to attacker behavior, and let SOAR handle the boring 80 percent.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~35 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#trap">The alert-fatigue trap</a></li>
+<li><a href="#telemetry">Telemetry: garbage in, garbage out</a></li>
+<li><a href="#lifecycle">Detection as a product</a></li>
+<li><a href="#attack">ATT&amp;CK-driven content</a></li>
+<li><a href="#patterns">Correlation patterns that work</a></li>
+<li><a href="#soar">SOAR decision gates</a></li>
+<li><a href="#qa">Testing your detections</a></li>
+<li><a href="#metrics">Measuring a SOC honestly</a></li>
+<li><a href="#close">What good looks like</a></li>
+</ol></nav>
+
+<section id="trap"><span class="h2num">// 01</span>
+<h2>The alert-fatigue trap</h2>
+<p>Every SOC I have walked into with a morale problem had the same root cause: a SIEM firing hundreds of alerts a day, most of them false, and analysts who had quietly learned to ignore the channel. The detections were not built. They were accumulated, one vendor default and one panicked "add a rule for that" at a time.</p>
+<p>The mindset shift that fixes this is treating <strong>detection as a product, not a pile of rules.</strong> A product has owners, requirements, a test suite, a release process, and metrics. It gets deprecated when it stops earning its place. A pile of rules just grows until the team drowns. Everything in this handbook flows from that one idea.</p>
+<div class="callout"><span class="l i">The only metric that matters at first</span>
+True-positive rate per detection. If a rule fires 200 times a week and 198 are noise, it is not a detection, it is a denial-of-service attack on your analysts. Measure this first, then ruthlessly tune or kill the worst offenders. A smaller set of trusted detections beats a large set of ignored ones every time.</div>
+</section>
+
+<section id="telemetry"><span class="h2num">// 02</span>
+<h2>Telemetry: garbage in, garbage out</h2>
+<p>You cannot detect what you cannot see, and you cannot correlate what is not normalized. Before writing a single rule, two questions: do I have the log source that would show this behavior, and is it parsed into consistent fields? The second question is where most programs quietly fail. A username appears as <span class="mono">user</span> in one source, <span class="mono">account_name</span> in another, and <span class="mono">src_user</span> in a third, and now your correlation across them is impossible.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">check coverage: which log sources are actually arriving</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">| tstats count WHERE index=* BY sourcetype, _time span=1h
+  | timechart span=1h count BY sourcetype</span>
+<span class="out">sourcetype                last_seen     events/hr</span>
+<span class="ok">WinEventLog:Security      14:00         48,210</span>
+<span class="ok">linux:auditd              14:00          9,884</span>
+<span class="bad">aws:cloudtrail            06:00              0   ← STOPPED 8h ago</span>
+<span class="pr">spl&gt;</span> <span class="cmd"># a silent log source is a blind spot; alert on absence too</span></pre></div>
+
+<div class="callout war"><span class="l">Detect the silence</span>
+The most dangerous log source is the one that stopped arriving without anyone noticing, because an attacker who disables logging looks exactly like a feed that broke. Build a detection that fires when an expected source goes quiet. Absence of data is itself a signal.</div>
+
+<p>Normalize to a schema. Whether you use the Elastic Common Schema, OCSF, or a vendor data model, the point is that <span class="mono">user.name</span> means the same thing everywhere. Map every source into it at ingest. This is unglamorous plumbing and it is the single highest-leverage thing you can do for detection quality.</p>
+</section>
+
+<section id="lifecycle"><span class="h2num">// 03</span>
+<h2>Detection as a product: the lifecycle</h2>
+<p>Each detection moves through stages, and the discipline is that nothing skips straight to production firing real alerts.</p>
+
+<figure><svg viewBox="0 0 820 130" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.sb{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.sl{font-family:'Orbitron';font-size:11px;font-weight:700;fill:#fff}.ss{font-family:'Share Tech Mono';font-size:8px;fill:#8aa0b8}.sf{stroke:#37d4ff;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#sa)}</style>
+<marker id="sa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="sb" x="14" y="45" width="120" height="46" rx="7"/><text class="sl" x="74" y="66" text-anchor="middle">IDEA</text><text class="ss" x="74" y="82" text-anchor="middle">hypothesis</text>
+<rect class="sb" x="164" y="45" width="120" height="46" rx="7"/><text class="sl" x="224" y="66" text-anchor="middle">BUILD</text><text class="ss" x="224" y="82" text-anchor="middle">query + logic</text>
+<rect class="sb" x="314" y="45" width="120" height="46" rx="7"/><text class="sl" x="374" y="66" text-anchor="middle">TEST</text><text class="ss" x="374" y="82" text-anchor="middle">replay attack</text>
+<rect class="sb" x="464" y="45" width="130" height="46" rx="7"/><text class="sl" x="529" y="66" text-anchor="middle">TUNE</text><text class="ss" x="529" y="82" text-anchor="middle">monitor-only</text>
+<rect class="sb" x="624" y="45" width="120" height="46" rx="7"/><text class="sl" x="684" y="66" text-anchor="middle">SHIP</text><text class="ss" x="684" y="82" text-anchor="middle">+ retire later</text>
+<path class="sf" d="M134,68 L162,68"/><path class="sf" d="M284,68 L312,68"/><path class="sf" d="M434,68 L462,68"/><path class="sf" d="M594,68 L622,68"/>
+</svg><figcaption>FIG.01: Every detection earns its way to production. The TEST and TUNE stages are where bad rules die before they reach an analyst.</figcaption></figure>
+
+<p>Store detections as code in version control. A detection is a query, some metadata (which ATT&amp;CK technique, what data source, who owns it), and a test case. Reviewed in pull requests, deployed by pipeline. This gives you history, rollback, and the ability to answer "why does this rule exist" two years later.</p>
+
+<h3>What a detection actually looks like as code</h3>
+<p>People hear "detection as code" and picture something complicated. It is not. It is a small structured file that travels with everything needed to understand, review, and test the rule. The metadata is as important as the query, because the metadata is what lets you answer the questions that come up at the worst times: which technique does this cover, why does it exist, who owns it, and what was it tested against. A detection without that context is a liability that no one will dare touch.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">detections/credential-access/lsass-access.yml</span></div>
+<pre><span class="pr">title:</span><span class="out"> Suspicious LSASS process access</span>
+<span class="pr">id:</span><span class="out"> a1b2-credaccess-lsass</span>
+<span class="pr">status:</span><span class="ok"> production</span>
+<span class="pr">owner:</span><span class="out"> detection-eng@corp</span>
+<span class="pr">attack:</span><span class="out"> [T1003.001]   </span><span class="cmt"># OS Credential Dumping: LSASS</span>
+<span class="pr">data_source:</span><span class="out"> sysmon EventID 10 (ProcessAccess)</span>
+<span class="pr">logic:</span><span class="out"> |
+  TargetImage endswith 'lsass.exe'
+  AND GrantedAccess in ('0x1010','0x1410')
+  AND SourceImage not in (allowed_av_edr_paths)</span>
+<span class="pr">test:</span><span class="out"> atomic T1003.001-1  </span><span class="cmt"># must fire on this, last verified 2026-05</span>
+<span class="pr">false_positives:</span><span class="out"> backup agents, some EDR self-checks</span>
+<span class="pr">tuning:</span><span class="out"> maintain allowed_av_edr_paths lookup</span></pre></div>
+
+<p>Now this rule is reviewable like any other code change, its history shows who changed the logic and why, and the test field means CI can prove it still fires before every release. When an analyst gets the alert at 3am, the metadata travels with it: they know it is credential dumping, they know the known false positives, they are not staring at an opaque rule wondering if it can be trusted.</p>
+
+<div class="callout"><span class="l i">The graveyard is part of the lifecycle</span>
+The stage everyone skips is retirement. Detections rot: a log source changes format, a tool gets decommissioned, an attacker technique falls out of use, the false-positive rate creeps up until analysts mute it. A detection nobody trusts and nobody tunes is worse than no detection, because it costs compute and credibility. Schedule a regular review that explicitly asks "should this still exist," and be willing to kill rules. A program that only ever adds detections is one that is slowly drowning itself.</div>
+</section>
+
+<section id="attack"><span class="h2num">// 04</span>
+<h2>ATT&amp;CK-driven content</h2>
+<p>Do not write detections for random bad things. Write them against the MITRE ATT&amp;CK techniques most relevant to your threat model, and track your coverage as a map. This turns "we have 400 rules" into "we cover 60 percent of the techniques our likely adversaries use, and here are the gaps."</p>
+
+<div class="tbl"><table>
+<tr><th>ATT&amp;CK technique</th><th>Telemetry needed</th><th>Detection idea</th></tr>
+<tr><td>T1110 Brute Force</td><td>Auth logs</td><td>N failed then 1 success, same account, short window</td></tr>
+<tr><td>T1059 Command/Script</td><td>Process + cmdline</td><td>Encoded PowerShell, suspicious parent-child (word spawning cmd)</td></tr>
+<tr><td>T1021 Remote Services</td><td>Network + auth</td><td>Lateral RDP/SMB from a host that never does it</td></tr>
+<tr><td>T1567 Exfil to Web</td><td>Proxy / DNS / netflow</td><td>Large outbound to a rare destination, off-hours</td></tr>
+<tr><td>T1078 Valid Accounts</td><td>Auth + geo</td><td>Impossible travel, new device + sensitive resource</td></tr>
+</table></div>
+
+<p>Here is a concrete one for the suspicious parent-child case, which catches a huge swath of initial-access and execution activity.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">T1059 // office app spawning a shell (Splunk-style)</span></div>
+<pre><span class="pr">spl&gt;</span> <span class="cmd">index=endpoint EventCode=1
+  parent_process_name IN ("winword.exe","excel.exe","outlook.exe")
+  process_name IN ("cmd.exe","powershell.exe","wscript.exe")
+| stats count min(_time) AS first BY host, user, parent_process_name, process_name
+| `security_content_ctime(first)`</span>
+<span class="out">host        user     parent          process        count</span>
+<span class="bad">FIN-WS-22   jdoe     winword.exe     powershell.exe     1</span>
+<span class="cmt"># a Word doc just launched PowerShell on a finance workstation</span></pre></div>
+</section>
+
+<section id="patterns"><span class="h2num">// 05</span>
+<h2>Correlation patterns that actually work</h2>
+<p>Single-event rules are easy and noisy. The detections that earn analyst trust usually correlate across events, sources, or time. A few patterns I reach for repeatedly.</p>
+<p><strong>Threshold then transition:</strong> not "a failed login" but "many failed logins followed by a success." The success after the storm is the signal. <strong>First-time-seen:</strong> this user has never logged in from this country, this service account has never called this API. Rarity is one of the strongest signals you have. <strong>Sequence:</strong> technique A then technique B then technique C on the same host in order, which is far higher-confidence than any one alone.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">first-time-seen: new country for an account (KQL)</span></div>
+<pre><span class="pr">kql&gt;</span> <span class="cmd">SigninLogs
+| where TimeGenerated > ago(1d)
+| join kind=leftanti (
+    SigninLogs
+    | where TimeGenerated between (ago(90d) .. ago(1d))
+    | distinct UserPrincipalName, Location
+  ) on UserPrincipalName, Location
+| where ResultType == 0
+| project TimeGenerated, UserPrincipalName, Location, IPAddress</span>
+<span class="out">TimeGenerated      UserPrincipalName   Location   IPAddress</span>
+<span class="warn">2026-06-01 03:14   svc-billing@corp    RU         185.x.x.x</span>
+<span class="cmt"># a service account, new country, 3am: that is your alert</span></pre></div>
+
+<div class="callout"><span class="l i">Enrich before you alert</span>
+A raw IP means nothing to a tired analyst at 3am. Enrich at detection time: geo, ASN, threat-intel reputation, whether the asset is a crown jewel, who owns the account. An alert that arrives with context gets triaged in two minutes. An alert that is just an IP and a timestamp gets snoozed.</div>
+</section>
+
+<section id="soar"><span class="h2num">// 06</span>
+<h2>SOAR decision gates</h2>
+<p>SOAR earns its keep by handling the repetitive 80 percent so humans focus on the 20 percent that needs judgment. The mistake teams make is trying to fully automate response on day one and then getting burned when the automation does something dumb at scale. The safer model is <strong>automate enrichment fully, gate consequential action behind a human.</strong></p>
+
+<figure><svg viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.ob{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.og{fill:rgba(255,182,72,.08);stroke:#ffb648;stroke-width:1.3;rx:7}.ol{font-family:'Orbitron';font-size:11px;font-weight:700;fill:#fff}.os{font-family:'Share Tech Mono';font-size:9px;fill:#8aa0b8}.of{stroke:#37d4ff;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#oa)}</style>
+<marker id="oa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="ob" x="14" y="78" width="120" height="46" rx="7"/><text class="ol" x="74" y="99" text-anchor="middle">ALERT</text><text class="os" x="74" y="115" text-anchor="middle">detection fires</text>
+<rect class="ob" x="164" y="78" width="140" height="46" rx="7"/><text class="ol" x="234" y="99" text-anchor="middle">AUTO-ENRICH</text><text class="os" x="234" y="115" text-anchor="middle">geo, intel, owner</text>
+<rect class="og" x="334" y="78" width="140" height="46" rx="7"/><text class="ol" x="404" y="95" text-anchor="middle" fill="#ffb648">GATE</text><text class="os" x="404" y="111" text-anchor="middle">risk high?</text>
+<rect class="ob" x="504" y="30" width="150" height="46" rx="7"/><text class="ol" x="579" y="51" text-anchor="middle">AUTO-CONTAIN</text><text class="os" x="579" y="67" text-anchor="middle">low-risk, reversible</text>
+<rect class="ob" x="504" y="126" width="150" height="46" rx="7"/><text class="ol" x="579" y="147" text-anchor="middle">HUMAN APPROVE</text><text class="os" x="579" y="163" text-anchor="middle">high-impact action</text>
+<path class="of" d="M134,101 L162,101"/><path class="of" d="M304,101 L332,101"/>
+<path class="of" d="M474,95 C490,80 490,60 502,55"/><path class="of" d="M474,107 C490,125 490,145 502,149"/>
+</svg><figcaption>FIG.02: Enrichment is fully automated. The gate routes low-risk reversible actions to automation and high-impact actions to a human. Never auto-execute something you cannot easily undo.</figcaption></figure>
+
+<p>Good candidates for full automation: enrich an alert, open a ticket, pull a device's recent process list, block a known-bad hash. Things that need a human gate: disabling a user account, isolating a production server, blocking an IP range that might contain customers. The rule of thumb is reversibility and blast radius. If a mistake is cheap and easy to undo, automate it. If it could take down payroll, gate it.</p>
+</section>
+
+<section id="qa"><span class="h2num">// 07</span>
+<h2>Testing your detections</h2>
+<p>A detection you have never tested is a hope, not a control. You do not know it fires until you make the behavior happen and watch it light up. This is where atomic tests come in: small, safe, scripted executions of a single ATT&amp;CK technique that you run in a lab and confirm your detection catches.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">run a controlled test of a technique, confirm the alert fires</span></div>
+<pre><span class="pr">$</span> <span class="cmd"># in an ISOLATED lab host, simulate T1059 office-spawns-shell</span>
+<span class="pr">$</span> <span class="cmd">Invoke-AtomicTest T1059.001 -TestNumbers 1</span>
+<span class="out">Executing test: powershell encoded command</span>
+<span class="ok">Done.</span>
+
+<span class="pr">$</span> <span class="cmd"># now confirm in the SIEM that the detection triggered</span>
+<span class="pr">spl&gt;</span> <span class="cmd">index=notable search_name="T1059 Office Spawns Shell" earliest=-10m</span>
+<span class="ok">1 result, detection fired as expected ✓</span>
+<span class="cmt"># if it did NOT fire, the rule is broken; fix before trusting it</span></pre></div>
+
+<div class="callout war"><span class="l">Only in a lab</span>
+Atomic and adversary-simulation tests execute real attacker techniques. Run them only in isolated, authorized lab environments, never against production or anything you do not own. Get written authorization for any testing that touches shared infrastructure.</div>
+
+<p>Make this continuous. A detection that worked last quarter can silently break when a log source changes format or a field gets renamed upstream. Automated, scheduled validation tells you the moment a detection goes dark, instead of discovering it during an incident.</p>
+</section>
+
+<section id="metrics"><span class="h2num">// 08</span>
+<h2>Measuring a SOC without lying to yourself</h2>
+<p>The metrics most SOCs report are the ones that are easy to count, not the ones that mean anything. Number of alerts processed, tickets closed, mean time to close. These feel like productivity but they mostly measure how much noise you generate and how fast you can dismiss it. A SOC closing ten thousand alerts a week is not ten times better than one closing a thousand; it might just have ten times the false positives. Vanity metrics make a drowning team look busy and a healthy team look idle.</p>
+<p>The metrics that actually tell you something are harder to game. True-positive rate per detection tells you whether your rules are signal or noise. Detection coverage against the techniques in your threat model tells you what you would miss. And the one I trust most is dwell time measured in your own exercises: when a red team or purple team gets a foothold, how many steps and how much time before a detection fires and an analyst acts. That number, tracked over quarters, is the closest thing to ground truth about whether your program is getting better.</p>
+
+<div class="tbl"><table>
+<tr><th>Vanity metric (avoid leaning on)</th><th>Honest metric (track instead)</th></tr>
+<tr><td>Alerts processed per week</td><td>True-positive rate per detection</td></tr>
+<tr><td>Total number of detection rules</td><td>ATT&amp;CK coverage of your threat model</td></tr>
+<tr><td>Mean time to close</td><td>Mean time to detect, then to contain</td></tr>
+<tr><td>Tickets closed by analyst</td><td>Detections that fired in the last real exercise</td></tr>
+<tr><td>Log volume ingested</td><td>Coverage gaps where you have no telemetry</td></tr>
+</table></div>
+
+<h3>Purple teaming is the feedback loop</h3>
+<p>The reason purple teaming matters more than any dashboard is that it closes the loop honestly. The red side runs a technique, the blue side checks whether anything fired, and where nothing did, you have found a real gap and you build a detection for it on the spot. Do this regularly and your coverage map stops being a guess and becomes evidence. It also keeps the team's skills sharp and turns the relationship between offense and defense from adversarial scorekeeping into shared improvement, which is the entire point. A detection program that has never been tested against a live adversary, even a friendly one, is a set of assumptions in a trench coat.</p>
+
+<div class="callout"><span class="l i">The number to put in front of leadership</span>
+When an executive asks "are we more secure than last year," do not answer with alert counts. Answer with the dwell-time trend from your exercises: last year it took a simulated attacker six steps and two days to reach crown jewels before we caught them, this year it takes nine steps and we catch them in hours. That is a sentence a board understands, and it is honest, because you measured it instead of counting tickets.</div>
+</section>
+
+<section id="close"><span class="h2num">// 09</span>
+<h2>What good looks like</h2>
+<p>A healthy detection program is small, trusted, and measured. Every detection maps to a technique you care about, has an owner, ships through a pipeline, and has a test that proves it works. Analysts trust the alert channel because the noise has been tuned out. SOAR quietly handles enrichment and the reversible actions, leaving humans for the judgment calls. And you can draw your ATT&amp;CK coverage on a map and point at the gaps you are working on next.</p>
+<p>You get there not by buying a better SIEM but by treating detection like the engineering discipline it is. Build, test, measure, retire. Repeat.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Pairs with: the endpoint threat-hunting handbook for the host telemetry these detections rely on, and the cloud hardening handbook for control-plane log sources.</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // DETECTION ENGINEERING <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive guidance. Run all simulation testing in authorized lab environments only. Not legal or compliance advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAM, PAM & IGA for Multi-Cloud and SaaS: A Field Handbook</title>
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  :root{
+    --hud:#37d4ff;--hud-dim:rgba(55,212,255,.6);--hud-faint:rgba(55,212,255,.14);
+    --gold:#ffb648;--green:#5ef38c;--red:#ff5d6c;--bg:#02060d;--panel:#070d18;--ink:#dbe7f5;--ink-dim:#8aa0b8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.72;
+    background-image:radial-gradient(1200px 600px at 80% -5%,rgba(55,212,255,.06),transparent 60%);}
+  .mono{font-family:'Share Tech Mono',monospace}
+  ::selection{background:var(--hud);color:#000}
+
+  /* scanline + corners */
+  .scanline{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(55,212,255,.018) 3px 4px)}
+  .corner{position:fixed;width:30px;height:30px;border:2px solid var(--hud-faint);z-index:55;pointer-events:none}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--hud);box-shadow:0 0 8px var(--hud);z-index:65;width:0}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+
+  /* masthead */
+  header.mast{padding:90px 0 50px;border-bottom:1px solid var(--hud-faint);position:relative}
+  .kicker{font-family:'Share Tech Mono';font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+  header.mast h1{font-family:'Orbitron';font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.04;
+    letter-spacing:-.5px;margin:18px 0 14px;color:#fff;text-shadow:0 0 24px rgba(55,212,255,.35)}
+  header.mast h1 .c{color:var(--hud)}
+  .standfirst{font-size:20px;color:var(--ink-dim);max-width:62ch;font-style:italic}
+  .byline{font-family:'Share Tech Mono';font-size:12px;color:var(--hud-dim);letter-spacing:1px;margin-top:26px;
+    display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .byline .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  /* TOC */
+  nav.toc{margin:46px 0;padding:24px 28px;border:1px solid var(--hud-faint);background:var(--panel);border-radius:8px}
+  nav.toc h4{font-family:'Share Tech Mono';font-size:12px;letter-spacing:2px;color:var(--hud);margin-bottom:14px}
+  nav.toc ol{list-style:none;counter-reset:s;column-count:2;column-gap:30px}
+  nav.toc li{counter-increment:s;font-family:'Share Tech Mono';font-size:13px;padding:5px 0;break-inside:avoid}
+  nav.toc li::before{content:"0" counter(s) " ";color:var(--hud-dim)}
+  nav.toc a{color:var(--ink-dim);text-decoration:none}
+  nav.toc a:hover{color:var(--hud)}
+  @media(max-width:640px){nav.toc ol{column-count:1}}
+
+  section{padding:48px 0;border-bottom:1px solid rgba(55,212,255,.07)}
+  h2{font-family:'Orbitron';font-weight:700;font-size:clamp(22px,3.4vw,32px);color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+  .h2num{font-family:'Share Tech Mono';font-size:13px;color:var(--hud);letter-spacing:2px;display:block;margin-bottom:6px}
+  h3{font-family:'Orbitron';font-weight:500;font-size:20px;color:var(--hud);margin:30px 0 10px}
+  h4{font-family:'Share Tech Mono';font-size:14px;color:var(--gold);letter-spacing:1px;margin:22px 0 8px;text-transform:uppercase}
+  p{margin:14px 0}
+  a{color:var(--hud)}
+  strong{color:#fff;font-weight:500}
+  em{color:var(--ink)}
+  ul,ol{margin:14px 0 14px 24px}
+  li{margin:7px 0}
+
+  /* terminal block */
+  .term{margin:22px 0;border:1px solid var(--hud-faint);border-radius:8px;overflow:hidden;background:#040a14;
+    box-shadow:0 0 24px -14px var(--hud)}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#081120;border-bottom:1px solid var(--hud-faint)}
+  .term-bar .b{width:11px;height:11px;border-radius:50%}
+  .term-bar .b.r{background:#ff5f56}.term-bar .b.y{background:#ffbd2e}.term-bar .b.g{background:#27c93f}
+  .term-bar .t{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);margin-left:8px;letter-spacing:1px}
+  .term pre{font-family:'Share Tech Mono';font-size:13px;line-height:1.62;color:#cfe8ff;padding:16px 18px;overflow-x:auto;white-space:pre}
+  .term pre .cmd{color:var(--green)}
+  .term pre .pr{color:var(--hud)}
+  .term pre .cmt{color:#5f708c;color:var(--ink-dim)}
+  .term pre .out{color:#a9c4dd}
+  .term pre .ok{color:var(--green)}
+  .term pre .warn{color:var(--gold)}
+  .term pre .bad{color:var(--red)}
+
+  /* callouts */
+  .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--hud);background:rgba(55,212,255,.05);border-radius:0 8px 8px 0;font-size:16px}
+  .callout.war{border-left-color:var(--gold);background:rgba(255,182,72,.06)}
+  .callout.danger{border-left-color:var(--red);background:rgba(255,93,108,.06)}
+  .callout .l{font-family:'Share Tech Mono';font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+  .callout .l.i{color:var(--hud)}.callout.war .l{color:var(--gold)}.callout.danger .l{color:var(--red)}
+
+  /* diagram frame */
+  figure{margin:30px 0;border:1px solid var(--hud-faint);border-radius:10px;background:var(--panel);padding:24px 18px 14px;
+    box-shadow:0 0 30px -18px var(--hud)}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{font-family:'Share Tech Mono';font-size:11px;color:var(--ink-dim);text-align:center;margin-top:12px;letter-spacing:1px}
+  .svg-label{font-family:'Share Tech Mono';font-size:11px;fill:var(--ink)}
+  .svg-sub{font-family:'Share Tech Mono';font-size:9px;fill:var(--ink-dim)}
+  .svg-title{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}
+
+  /* table */
+  .tbl{margin:22px 0;overflow-x:auto;border:1px solid var(--hud-faint);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-family:'Share Tech Mono';font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid rgba(55,212,255,.1);vertical-align:top}
+  th{background:#081120;color:var(--hud);letter-spacing:1px;font-weight:400;text-transform:uppercase;font-size:11px}
+  td{color:var(--ink-dim)}
+  tr:hover td{background:rgba(55,212,255,.03);color:var(--ink)}
+  .tag{display:inline-block;font-family:'Share Tech Mono';font-size:10px;padding:2px 7px;border:1px solid var(--hud-faint);border-radius:4px;color:var(--hud);letter-spacing:1px}
+
+  footer{padding:60px 0 80px;text-align:center;font-family:'Share Tech Mono';font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+  footer .c{color:var(--hud)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--hud-faint),transparent);margin:8px 0}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&lt; ALL HANDBOOKS</a>
+<div class="scanline"></div>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<header class="mast">
+  <span class="kicker">Field Handbook // Identity Governance</span>
+  <h1>Identity, Privilege &amp; Governance <span class="c">at Scale</span></h1>
+  <p class="standfirst">Identity is the control plane for everything now. Here is how I think about the joiner-mover-leaver lifecycle, separation of duties, privileged session governance, and the audit trail that keeps you out of trouble, across cloud and a hundred SaaS apps.</p>
+  <div class="byline"><span class="dot"></span><span>BY IBRAHIM SULTAN</span><span>// CYBERSECURITY ENGINEER</span><span>// ~32 MIN READ</span><span>// REV 2026.06</span></div>
+</header>
+
+<nav class="toc"><h4>&gt; CONTENTS</h4><ol>
+<li><a href="#why">The three letters, untangled</a></li>
+<li><a href="#jml">Joiner, mover, leaver</a></li>
+<li><a href="#sod">Separation of duties</a></li>
+<li><a href="#pam">Privileged access &amp; sessions</a></li>
+<li><a href="#mfa">Phishing-resistant MFA</a></li>
+<li><a href="#detect">Detection use-cases</a></li>
+<li><a href="#audit">The audit you will face</a></li>
+<li><a href="#nhi">The identities that are not people</a></li>
+<li><a href="#close">First principles</a></li>
+</ol></nav>
+
+<section id="why"><span class="h2num">// 01</span>
+<h2>The three letters, untangled</h2>
+<p>People use IAM, PAM, and IGA interchangeably and then wonder why projects stall. They are different jobs. <strong>IAM</strong> is authentication and authorization: proving who you are and what you can access. <strong>PAM</strong> is the special handling of powerful accounts: vaulting, brokering, and recording privileged access. <strong>IGA</strong> is governance: the lifecycle, the access reviews, the certification that you can prove to an auditor that access is correct.</p>
+<p>The way I hold it: IAM is the lock, PAM is the safe inside the building for the crown jewels, and IGA is the paperwork and review process that proves every key is in the right hands. You need all three, and they have to talk to each other.</p>
+<div class="callout"><span class="l i">The leverage point</span>
+In a multi-cloud, multi-SaaS world, the identity provider is the universal control plane. Every app federates to it. That makes the IdP both your biggest security win (fix access once, fix it everywhere) and your biggest single point of failure (own the IdP, own everything). Govern it accordingly.</div>
+</section>
+
+<section id="jml"><span class="h2num">// 02</span>
+<h2>Joiner, mover, leaver: automate the lifecycle</h2>
+<p>Most access problems trace back to a broken lifecycle. Someone joined and got access cloned from a colleague. They moved teams and kept the old access on top of the new (privilege creep). They left and an account lingered for months. Each of these is a breach waiting to happen, and each is fixable with automation driven from an authoritative source, usually the HR system.</p>
+
+<figure><svg viewBox="0 0 820 150" xmlns="http://www.w3.org/2000/svg">
+<defs><style>.jb{fill:#070d18;stroke:#37d4ff;stroke-width:1.2;rx:7}.jl{font-family:'Orbitron';font-size:12px;font-weight:700;fill:#fff}.js{font-family:'Share Tech Mono';font-size:9px;fill:#8aa0b8}.jf{stroke:#37d4ff;stroke-width:1.2;fill:none;opacity:.6;marker-end:url(#ja)}</style>
+<marker id="ja" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#37d4ff"/></marker></defs>
+<rect class="jb" x="20" y="50" width="150" height="50" rx="7"/><text class="jl" x="95" y="72" text-anchor="middle">HR SYSTEM</text><text class="js" x="95" y="88" text-anchor="middle">source of truth</text>
+<rect class="jb" x="240" y="50" width="150" height="50" rx="7"/><text class="jl" x="315" y="72" text-anchor="middle">JOINER</text><text class="js" x="315" y="88" text-anchor="middle">role-based grant</text>
+<rect class="jb" x="440" y="50" width="150" height="50" rx="7"/><text class="jl" x="515" y="72" text-anchor="middle">MOVER</text><text class="js" x="515" y="88" text-anchor="middle">revoke old, grant new</text>
+<rect class="jb" x="640" y="50" width="150" height="50" rx="7"/><text class="jl" x="715" y="72" text-anchor="middle">LEAVER</text><text class="js" x="715" y="88" text-anchor="middle">deprovision all</text>
+<path class="jf" d="M170,75 L238,75"/><path class="jf" d="M390,75 L438,75"/><path class="jf" d="M590,75 L638,75"/>
+</svg><figcaption>FIG.01: The JML lifecycle driven from HR. The mover step is the one everyone forgets, and it is where privilege creep is born.</figcaption></figure>
+
+<p>The mover transition is the silent killer. A grant-on-move without a corresponding revoke means people accumulate entitlements for a decade. Audit for it directly: find accounts whose access spans roles they no longer hold.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">find likely leaver accounts that were never disabled (Entra)</span></div>
+<pre><span class="pr">PS&gt;</span> <span class="cmd">Get-MgUser -All -Property DisplayName,AccountEnabled,SignInActivity |
+  Where-Object {
+    $_.AccountEnabled -eq $true -and
+    $_.SignInActivity.LastSignInDateTime -lt (Get-Date).AddDays(-90)
+  } | Select DisplayName, @{n='LastSignIn';
+       e={$_.SignInActivity.LastSignInDateTime}}</span>
+<span class="out">DisplayName        LastSignIn</span>
+<span class="warn">Contractor A       2026-01-04   (enabled, silent 5 months)</span>
+<span class="bad">Former Employee B  2025-11-20   (enabled, gone since Nov)</span>
+<span class="cmt"># enabled accounts with no recent sign-in = deprovisioning gap</span></pre></div>
+</section>
+
+<section id="sod"><span class="h2num">// 03</span>
+<h2>Separation of duties</h2>
+<p>Separation of duties is the control that stops one person from holding a toxic combination of permissions, the classic being someone who can both create a vendor and approve payments to it. SoD is a governance model, not a technical toggle: you define the conflicting pairs, then continuously check that no identity holds both.</p>
+
+<div class="tbl"><table>
+<tr><th>Conflict (toxic pair)</th><th>Why it matters</th><th>Control</th></tr>
+<tr><td>Create vendor + approve payment</td><td>Invoice fraud</td><td>Require different people; alert on overlap</td></tr>
+<tr><td>Write code + approve own deploy to prod</td><td>Unreviewed change</td><td>Mandatory separate approver in pipeline</td></tr>
+<tr><td>Grant access + audit access</td><td>Cover own tracks</td><td>Reviewer cannot be the granter</td></tr>
+<tr><td>Manage backups + manage encryption keys</td><td>Ransom + destroy recovery</td><td>Split duties across roles</td></tr>
+</table></div>
+
+<div class="callout war"><span class="l">SoD is continuous, not one-time</span>
+Checking SoD at access-grant time is necessary but not sufficient. Conflicts accumulate as people move roles. Run the toxic-pair check continuously and surface violations for review, because the dangerous combination is usually assembled gradually, one innocent-looking grant at a time.</div>
+</section>
+
+<section id="pam"><span class="h2num">// 04</span>
+<h2>Privileged access and session governance</h2>
+<p>Privileged accounts are the keys to the kingdom, so they get special handling that normal accounts do not. The PAM model has three pillars. <strong>Vault</strong> the credentials so no human knows the actual admin password and it rotates automatically. <strong>Broker</strong> the access so admins connect through a gateway rather than directly, with just-in-time elevation. <strong>Record</strong> the session so there is an auditable trail of what was done with that power.</p>
+<p>Combined with the just-in-time model from Zero Trust, this means a privileged session is requested, approved, time-boxed, fully recorded, and the credential never leaves the vault. A stolen laptop yields no standing admin power because there is none to steal.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">audit // privileged role activations in the last 24h (should be rare, JIT)</span></div>
+<pre><span class="pr">kql&gt;</span> <span class="cmd">AuditLogs
+| where TimeGenerated > ago(24h)
+| where OperationName has "Add member to role"
+| where Result == "success"
+| project TimeGenerated, Initiator=InitiatedBy.user.userPrincipalName,
+          Role=TargetResources[0].displayName</span>
+<span class="out">TimeGenerated      Initiator           Role</span>
+<span class="ok">06-01 09:14        admin1@corp         Global Administrator  (JIT, 1h)</span>
+<span class="bad">06-01 03:02        svc-automation      Global Administrator  </span>
+<span class="cmt"># a service account self-elevating to GA at 3am: investigate now</span></pre></div>
+</section>
+
+<section id="mfa"><span class="h2num">// 05</span>
+<h2>Phishing-resistant MFA, end to end</h2>
+<p>This bears repeating across every identity handbook because it is the single highest-impact identity control of the decade. Push-approval and SMS MFA fall to push fatigue and SIM swaps, both commodity attacks now. The bar is FIDO2 security keys or platform passkeys, which are bound to the legitimate origin so a phishing proxy cannot relay them. Roll to admins first (they are the highest-value target), then privileged and sensitive roles, then everyone. Track coverage weighted by privilege, because an admin still on SMS is far more dangerous than an intern on SMS.</p>
+
+<h3>Why ordinary MFA stopped being enough</h3>
+<p>It is worth being precise about what killed plain MFA, because the failure is not theoretical. The dominant credential attack now is adversary-in-the-middle phishing: the victim lands on a proxy that perfectly mirrors the real login page, enters their password and approves the MFA prompt, and the proxy relays all of it to the real site in real time and steals the resulting session token. The victim sees a normal login. The attacker walks away with an authenticated session, having defeated the password and the MFA in one motion. Kits that do this are rented cheaply and require little skill to operate.</p>
+<p>The reason FIDO2 and passkeys defeat this is elegant: the credential is cryptographically bound to the real site's origin, so when the victim is on the phishing proxy, the authenticator simply refuses to produce a valid response for the wrong domain. There is nothing for the proxy to relay. This is not a marginal improvement over push MFA, it is a categorical one, because it removes the human's ability to be tricked into authenticating to the wrong place. That is why "we have MFA" is no longer the right answer to "are we protected against phishing." The right question is whether your MFA is phishing-resistant, and for most orgs the honest answer is "only for the admins so far, and we are working down the list."</p>
+
+<div class="callout danger"><span class="l">Token theft survives MFA entirely</span>
+Even phishing-resistant MFA only protects the moment of authentication. Once a session token exists, an attacker who steals it from a compromised device can replay it without ever touching your MFA. This is why the session layer matters: short token lifetimes, binding tokens to the device they were issued to, and continuous re-evaluation so a token used from a new location or an unhealthy device gets challenged again. MFA gets you a good login. It does not keep the session honest afterward. That job belongs to the continuous-evaluation side of Zero Trust.</div>
+</section>
+
+<section id="detect"><span class="h2num">// 06</span>
+<h2>Identity detection use-cases</h2>
+<p>Identity is now a primary detection surface. The behaviors worth alerting on, in rough priority order: a dormant account suddenly active, impossible travel (two logins too far apart in time and space to be real), privileged role granted outside the JIT process, MFA method registered then immediately used from a new device (a classic account-takeover pattern), and consent granted to a new OAuth application requesting broad scopes.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">detect // risky OAuth consent grant (token-theft path)</span></div>
+<pre><span class="pr">kql&gt;</span> <span class="cmd">AuditLogs
+| where OperationName == "Consent to application"
+| extend scopes = tostring(TargetResources[0].modifiedProperties)
+| where scopes has_any ("Mail.Read","Files.ReadWrite.All","offline_access")
+| project TimeGenerated, User=InitiatedBy.user.userPrincipalName, scopes</span>
+<span class="out">TimeGenerated   User           scopes</span>
+<span class="bad">06-01 11:40     jdoe@corp      Mail.Read, offline_access, Files.ReadWrite.All</span>
+<span class="cmt"># a user just gave an unknown app persistent access to their mail</span>
+<span class="cmt"># and all files. illicit consent grant is the modern phish.</span></pre></div>
+</section>
+
+<section id="audit"><span class="h2num">// 07</span>
+<h2>The audit you will face</h2>
+<p>Sooner or later an auditor asks: prove that every person with access to this sensitive system should have it, and show me you reviewed it. That is the access certification, and IGA exists largely to make answering it possible. The two things that make audits painless: entitlements are tied to roles (so you certify a role once, not a thousand individual grants), and reviews are scheduled, tracked, and actioned (a review where everyone clicks "approve all" is theater the auditor will see through).</p>
+
+<div class="callout"><span class="l i">Make revocation the easy path</span>
+The reason access reviews become rubber-stamp exercises is that revoking is scary (might break something) while approving is safe. Flip that. Make revocation low-risk and reversible, give reviewers usage data ("this person has not used this access in 6 months"), and the reviews start actually removing access. A review that never revokes anything is not a control.</div>
+</section>
+
+<section id="nhi"><span class="h2num">// 08</span>
+<h2>The identities that are not people</h2>
+<p>Every control discussed so far implicitly assumes a human: someone to enroll in MFA, someone to certify in a review, someone whose joiner-mover-leaver you can drive from HR. But the fastest-growing population of identities in your estate has no human attached at all. Service accounts, API keys, OAuth applications, CI/CD tokens, cloud workload identities, bots. They now outnumber human identities many times over, and almost none of your human-centric governance reaches them.</p>
+<p>This is the gap that keeps getting orgs breached after they have done the human side well. You can have flawless phishing-resistant MFA across every employee and still get fully compromised through a single OAuth application with standing access to everyone's mail, or a CI token with permanent production rights sitting in a pipeline variable. The attacker does not need to phish anyone if there is a non-human identity that already holds the keys and never gets reviewed.</p>
+
+<div class="term"><div class="term-bar"><span class="b r"></span><span class="b y"></span><span class="b g"></span><span class="t">find OAuth apps with broad standing permissions (Entra)</span></div>
+<pre><span class="pr">PS&gt;</span> <span class="cmd">Get-MgServicePrincipal -All |
+  ForEach-Object {
+    $perms = Get-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $_.Id
+    if ($perms.AppRoleId) {
+      [pscustomobject]@{ App=$_.DisplayName; Grants=$perms.Count }
+    }
+  } | Sort-Object Grants -Descending | Select -First 10</span>
+<span class="out">App                       Grants</span>
+<span class="bad">LegacyReportingConnector  23   </span><span class="cmt"># 23 app permissions, owner unknown</span>
+<span class="warn">MarketingAutomation       11</span>
+<span class="cmt"># every high-grant app is a non-human identity to govern or kill</span></pre></div>
+
+<h3>Govern machines like you govern people</h3>
+<p>The fix is to extend the same disciplines you already built for humans to the non-human population. Every machine identity needs an owner, a human who is accountable for its existence and answers for it in reviews. It needs a lifecycle, so that when the project or integration it served ends, it is deprovisioned rather than left to linger with live access. It needs least privilege, scoped to what it actually calls rather than the broad grant someone gave it to unblock a deadline. And wherever the platform allows, it needs to move off long-lived static secrets onto short-lived, federated credentials, so there is nothing durable to steal.</p>
+
+<div class="callout danger"><span class="l">The ownerless token is the time bomb</span>
+The most dangerous identity in most estates is a non-human one created years ago for a since-forgotten purpose, still holding production access, that no current employee can explain. Run a recurring sweep for machine identities with broad permissions and no recent activity or no named owner. An unowned, over-permissioned, unused credential is not a loose end to tidy up someday. It is an open door, and the only question is whether you find it before someone else does.</div>
+</section>
+
+<section id="close"><span class="h2num">// 09</span>
+<h2>First principles</h2>
+<p>If identity is the control plane, then governing it well is most of security. Drive the lifecycle from an authoritative source so access tracks reality. Hunt the mover gap and the leaver gap, because that is where stale privilege hides. Vault, broker, and record privileged access so there is no standing power to steal and a clean trail of what was done. Put everyone on phishing-resistant MFA, admins first. And treat the audit as a forcing function for the hygiene you should be doing anyway.</p>
+<p>Do this and the rest of your security program stands on solid ground. Skip it and you are defending a building where the locks are decorative.</p>
+<div class="rule"></div>
+<p class="mono" style="color:var(--ink-dim);font-size:14px;margin-top:24px">// Pairs with: the Zero Trust handbook (identity is its foundation) and the detection engineering handbook (identity detections in depth).</p>
+</section>
+
+<footer><div class="rule"></div>
+<p style="margin-top:24px"><span class="c">[</span> FIELD HANDBOOK // IAM &middot; PAM &middot; IGA <span class="c">]</span> &middot; WRITTEN BY IBRAHIM SULTAN &middot; <span class="c">STAY CURIOUS, STAY PATCHED</span></p>
+<p style="margin-top:8px;opacity:.6">Defensive guidance. Test in non-production directories first. Not legal or compliance advice.</p></footer>
+
+</div>
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;
+  document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+</script>
+</body>
+</html>
