@@ -51,7 +51,7 @@
     }
     .code-column {
       position: absolute;
-      top: -45vh;
+      top: 0;
       width: 210px;
       color: #59e0ff;
       font-size: 12px;
@@ -62,7 +62,7 @@
       text-shadow: 0 0 9px rgba(55, 212, 255, 0.35);
       user-select: none;
       opacity: 0.78;
-      min-height: 100%;
+      min-height: 300vh;
     }
     @keyframes codefall {
       from { transform: translateY(0); }
@@ -329,6 +329,7 @@
       padding: 0;
       cursor: pointer;
       transition: all 220ms ease;
+      pointer-events: auto;
     }
     .tunnel-card:hover,
     .tunnel-card:focus-visible {
@@ -996,10 +997,10 @@
       }, { passive: true });
 
       tunnelViewport.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
         dragActive = true;
         dragStartY = event.clientY;
         dragStartProgress = tunnelProgress;
-        tunnelViewport.setPointerCapture(event.pointerId);
       });
 
       tunnelViewport.addEventListener("pointermove", (event) => {
@@ -1007,18 +1008,14 @@
           return;
         }
         const delta = dragStartY - event.clientY;
-        tunnelProgress = clamp(dragStartProgress + delta * 0.0012, 0, 1);
-        updateTunnel();
+        if (Math.abs(delta) > 5) {
+          tunnelProgress = clamp(dragStartProgress + delta * 0.0012, 0, 1);
+          updateTunnel();
+        }
       });
 
       const endDrag = (event) => {
-        if (!dragActive) {
-          return;
-        }
         dragActive = false;
-        if (event && tunnelViewport.hasPointerCapture(event.pointerId)) {
-          tunnelViewport.releasePointerCapture(event.pointerId);
-        }
       };
 
       tunnelViewport.addEventListener("pointerup", endDrag);
