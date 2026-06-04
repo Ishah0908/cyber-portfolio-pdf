@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/.*", "destination": "https://ibrahim-sultan-portfolio.vercel.app/:path", "has": [{ "type": "host", "value": "www.ibrahim-sultan-portfolio.vercel.app" }] }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/$1" }
   ]
