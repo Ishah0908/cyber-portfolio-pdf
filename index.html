@@ -62,7 +62,7 @@
       -webkit-mask-composite: xor;
               mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
               mask-composite: exclude;
-      animation: reactorSpin 5s linear infinite;
+      animation: reactorSpin 14s linear infinite;
       filter: drop-shadow(0 0 6px rgba(55, 212, 255, 0.55));
     }
     /* a second, offset beam so it reads like two power feeds circling the frame */
@@ -83,8 +83,8 @@
       -webkit-mask-composite: xor;
               mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
               mask-composite: exclude;
-      animation: reactorSpin 5s linear infinite;
-      animation-delay: -2.5s;                          /* opposite side of the loop */
+      animation: reactorSpin 14s linear infinite;
+      animation-delay: -7s;                            /* opposite side of the loop */
       filter: drop-shadow(0 0 6px rgba(255, 182, 72, 0.4));
       opacity: 0.85;
     }
@@ -111,8 +111,62 @@
       0%, 100% { opacity: 0.5; transform: scale(0.85); }
       50%      { opacity: 1;   transform: scale(1.15); }
     }
+    /* the actual arc-reactor core powering the page (bottom-centre) */
+    .arc-reactor {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      margin-left: -27px;
+      width: 54px;
+      height: 54px;
+      z-index: 32;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        #eaffff 0%, #9bf3ff 13%, #37d4ff 28%,
+        rgba(55, 212, 255, 0.22) 46%, transparent 62%);
+      box-shadow:
+        0 0 18px rgba(55, 212, 255, 0.7),
+        0 0 42px rgba(55, 212, 255, 0.35),
+        inset 0 0 10px rgba(214, 251, 255, 0.8);
+      animation: reactorGlow 3s ease-in-out infinite;
+    }
+    .arc-reactor::before {     /* spinning coil ring */
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #6fe6ff 0 7%, transparent 7% 12.5%,
+        #6fe6ff 12.5% 19.5%, transparent 19.5% 25%,
+        #6fe6ff 25% 32%, transparent 32% 37.5%,
+        #6fe6ff 37.5% 44.5%, transparent 44.5% 50%,
+        #6fe6ff 50% 57%, transparent 57% 62.5%,
+        #6fe6ff 62.5% 69.5%, transparent 69.5% 75%,
+        #6fe6ff 75% 82%, transparent 82% 87.5%,
+        #6fe6ff 87.5% 94.5%, transparent 94.5% 100%);
+      -webkit-mask: radial-gradient(circle, transparent 0 42%, #000 45% 70%, transparent 73%);
+              mask: radial-gradient(circle, transparent 0 42%, #000 45% 70%, transparent 73%);
+      opacity: 0.85;
+      animation: spin360 9s linear infinite;
+    }
+    .arc-reactor::after {      /* bright triangular core */
+      content: "";
+      position: absolute;
+      inset: 37%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, #cdfaff 45%, #37d4ff 100%);
+      box-shadow: 0 0 12px #9bf3ff, 0 0 22px rgba(55, 212, 255, 0.7);
+    }
+    @keyframes reactorGlow {
+      0%, 100% { filter: brightness(1); }
+      50%      { filter: brightness(1.28); }
+    }
+    @keyframes spin360 { to { transform: rotate(360deg); } }
+
     @media (prefers-reduced-motion: reduce) {
-      .power-frame::before, .power-frame::after, .power-bolt { animation: none; }
+      .power-frame::before, .power-frame::after, .power-bolt,
+      .arc-reactor, .arc-reactor::before { animation: none; }
     }
 
     .code-backdrop {
@@ -123,7 +177,7 @@
       bottom: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.4;
+      opacity: 0.28;
       overflow: hidden;
       transform-origin: center center;
       transition: opacity 120ms linear, filter 120ms linear;
@@ -771,6 +825,7 @@
   <span class="power-bolt tr" aria-hidden="true"></span>
   <span class="power-bolt bl" aria-hidden="true"></span>
   <span class="power-bolt br" aria-hidden="true"></span>
+  <div class="arc-reactor" aria-hidden="true" title="Arc Reactor // powering this page"></div>
 
   <div class="status">SYS <span class="rec">●</span> ONLINE · AES-256 · ◉ <span class="rec">REC</span></div>
   <nav class="top-nav" aria-label="Primary">
@@ -1126,7 +1181,7 @@
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const progress = Math.min(1, window.scrollY / maxScroll);
       const zoom = 1 + progress * 0.16;          // gentle zoom (was 0.62)
-      const opacity = 0.4 + progress * 0.1;
+      const opacity = 0.28 + progress * 0.08;
 
       // Backdrop is fixed and fills the viewport; code stays visible across the
       // whole page. Only a subtle zoom, and a calm settle near the very end.
