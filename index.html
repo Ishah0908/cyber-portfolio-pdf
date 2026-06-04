@@ -44,42 +44,44 @@
       will-change: transform, filter, opacity;
     }
     .code-backdrop.terminal {
-      filter: contrast(1.45) saturate(1.3) blur(0.4px);
-      opacity: 0.28;
-      animation: terminalShake 180ms steps(2, end) infinite;
+      animation: terminalShake 2.4s ease-in-out infinite;
     }
     .code-column {
       position: absolute;
       top: 0;
-      width: 210px;
+      width: 230px;
       height: 100vh;
       color: #59e0ff;
       font-size: 12px;
-      line-height: 1.42;
+      line-height: 1.5;
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       overflow: hidden;
-      text-shadow: 0 0 16px rgba(55, 212, 255, 0.7);
+      text-shadow: 0 0 16px rgba(55, 212, 255, 0.6);
       user-select: none;
       opacity: 1;
       z-index: 1;
+      /* terminal log sticks to the bottom; older lines scroll off the top */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
-    @keyframes codefall {
-      from { transform: translateY(0); }
-      to { transform: translateY(175vh); }
+    .code-column .cmd { color: #8df0ff; }
+    .code-column .cmd .pmt { color: #5ef38c; }      /* prompt $ */
+    .code-column .out { color: #4f7e96; }            /* dim output */
+    .code-column .out.ok { color: #5ef38c; }
+    .code-column .out.warn { color: #ffb648; }
+    .code-column .cur::after {
+      content: "▋";
+      color: #9bf3ff;
+      animation: caretBlink 1s steps(1) infinite;
     }
+    @keyframes caretBlink { 50% { opacity: 0; } }
+    /* gentle end-of-page settle: tiny drift, no violent jitter */
     @keyframes terminalShake {
-      0% { transform: translate3d(0, 0, 0) scale(var(--zoom, 1)); }
-      10% { transform: translate3d(-3px, 2px, 0) scale(calc(var(--zoom, 1) * 1.08)); }
-      20% { transform: translate3d(3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.05)); }
-      30% { transform: translate3d(-2px, 3px, 0) scale(calc(var(--zoom, 1) * 1.12)); }
-      40% { transform: translate3d(4px, -2px, 0) scale(calc(var(--zoom, 1) * 1.06)); }
-      50% { transform: translate3d(-3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.15)); }
-      60% { transform: translate3d(2px, 4px, 0) scale(calc(var(--zoom, 1) * 1.08)); }
-      70% { transform: translate3d(-4px, 2px, 0) scale(calc(var(--zoom, 1) * 1.10)); }
-      80% { transform: translate3d(3px, -3px, 0) scale(calc(var(--zoom, 1) * 1.07)); }
-      90% { transform: translate3d(-2px, 2px, 0) scale(calc(var(--zoom, 1) * 1.09)); }
-      100% { transform: translate3d(1px, 1px, 0) scale(var(--zoom, 1)); }
+      0%   { transform: translate3d(0, 0, 0) scale(var(--zoom, 1)); }
+      50%  { transform: translate3d(0.6px, -0.6px, 0) scale(calc(var(--zoom, 1) * 1.004)); }
+      100% { transform: translate3d(0, 0, 0) scale(var(--zoom, 1)); }
     }
 
     .status {
@@ -368,7 +370,7 @@
       cursor: pointer;
       pointer-events: auto;
       backface-visibility: hidden;
-      transform: rotateY(var(--card-angle, 0deg)) translateZ(var(--drum-radius, 300px));
+      transform: rotateY(var(--card-angle, 0deg)) translateZ(var(--drum-radius, 300px)) scale(var(--card-scale, 1));
       transition: border-color 220ms ease, box-shadow 220ms ease;
     }
     @media (max-width: 900px) {
@@ -890,54 +892,53 @@
     let dragStartX = 0;
     let dragStartRotation = 0;
     let autoSpin = true;
-    const codeLines = [
-      "// DETECTION & MONITORING",
-      "falco -c /etc/falco/falco.yaml --cri /run/crio/crio.sock",
-      "tetragon run --config tetragon.yaml --export-filename=events.json",
-      "cilium monitor --type drop --related-to pod=default/web-*",
-      "kubectl get ciliumnetworkpolicies -A -o wide",
-      "wazuh-logtest -v /var/ossec/etc/rules/local_rules.xml",
-      "zeek -i eth0 local policy-dir=/opt/zeek/share/zeek/policy",
-      "suricata -T -c /etc/suricata/suricata.yaml -v",
-      "crowdsec-cli lapi status",
-      "",
-      "// VULNERABILITY & COMPLIANCE",
-      "trivy image --severity CRITICAL,HIGH nginx:latest",
-      "grype registry:ghcr.io/project:latest --scope all-layers",
-      "semgrep --config p/owasp-top-ten src/ --json",
-      "gitleaks detect --source . --verbose --redact",
-      "syft packages app:latest -o spdx-json > sbom.json",
-      "cosign verify-blob --signature sig app.tar.gz",
-      "",
-      "// INFRASTRUCTURE & IAM",
-      "terraform validate && tfsec . --minimum-severity MEDIUM",
-      "aws iam get-account-summary --query 'SummaryMap'",
-      "gcloud projects get-iam-policy PROJECT --format=json",
-      "az role assignment list --all --include-inherited",
-      "kubectl auth can-i list secrets --as=system:serviceaccount:default:app",
-      "",
-      "// SECURITY TESTING (AUTHORIZED ONLY)",
-      "nmap -sV --script vuln,exploit -p- target.internal",
-      "sqlmap -u 'http://target/login' --data='user=*&pass=*' -p user",
-      "metasploit-framework // msfconsole -r exploit.rc",
-      "burpsuite --config-file=burp_config.json --project-file=app.burp",
-      "hashcat -m 0 -a 3 hashes.txt -o cracked.txt ?a?a?a?a",
-      "john --wordlist=rockyou.txt --format=sha512crypt hashes",
-      "wireshark -i eth0 -f 'tcp.port == 443' -w capture.pcapng",
-      "aircrack-ng -w wordlist.txt -b AA:BB:CC:DD:EE:FF capture.cap",
-      "",
-      "// INCIDENT RESPONSE",
-      "osqueryi \"SELECT * FROM process WHERE name='suspicious';\"",
-      "yara -r -s rules/ /var/log/ /var/spool/",
-      "volatility -f memory.dump --profile=Win10x64 pslist",
-      "strings sample.exe | grep -i 'http\\|cmd\\|powershell'",
-      "tcpdump -i any -w incident.pcap 'host attacker.ip'",
-      "",
-      "// SECURE DEVELOPMENT",
-      "checksec --file=/bin/app",
-      "objdump -M intel -d app | grep -E 'jmp|call|ret'",
-      "strace -e trace=file,network -o strace.log ./app",
-      "python -m py_compile *.py --verify // AST verification"
+    // A realistic terminal session: each entry is a command and the output it prints.
+    // The backdrop types the command, prints its output, then moves to the next —
+    // a continuous, flowing shell log behind the page.
+    const codeSession = [
+      { cmd: "nmap -sV --top-ports 50 target.internal", out: [
+        ["Starting Nmap 7.94 ( https://nmap.org )", ""],
+        ["22/tcp  open  ssh     OpenSSH 9.6", "ok"],
+        ["443/tcp open  https   nginx 1.25.4", "ok"],
+        ["3306/tcp open mysql   MySQL 8.0.36", "warn"] ] },
+      { cmd: "trivy image --severity CRITICAL,HIGH nginx:latest", out: [
+        ["nginx:latest (debian 12.4)", ""],
+        ["Total: 3 (CRITICAL: 1, HIGH: 2)", "warn"],
+        ["CVE-2024-0727  openssl  FIXED in 3.0.13", "ok"] ] },
+      { cmd: "gitleaks detect --source . --redact", out: [
+        ["scanned 1,284 commits in 4.2s", ""],
+        ["leaks found: 0", "ok"] ] },
+      { cmd: "kubectl auth can-i --list --as=svc:web", out: [
+        ["Resources   Verbs", ""],
+        ["pods        [get list]", ""],
+        ["secrets     []  # denied", "ok"] ] },
+      { cmd: "falco -r /etc/falco/rules.yaml", out: [
+        ["Falco initialized, 248 rules loaded", ""],
+        ["Notice  Shell in container (proc=bash)", "warn"] ] },
+      { cmd: "sqlmap -u 'https://app/login' --batch", out: [
+        ["testing connection to target...", ""],
+        ["parameter 'user' appears injectable", "warn"],
+        ["[*] back-end DBMS: MySQL >= 8.0", ""] ] },
+      { cmd: "hashcat -m 22000 wpa.hc22000 rockyou.txt", out: [
+        ["Session..: hashcat  Status: Running", ""],
+        ["Speed.#1.: 412.7 kH/s   Recovered: 0/1", ""] ] },
+      { cmd: "openssl s_client -connect app:443 -brief", out: [
+        ["CONNECTION ESTABLISHED", "ok"],
+        ["Protocol: TLSv1.3  Cipher: AES_256_GCM", "ok"],
+        ["Verification: OK", "ok"] ] },
+      { cmd: "osquery> SELECT name,pid FROM processes;", out: [
+        ["sshd       1180", ""],
+        ["nginx      2204", ""],
+        ["xmrig      9912   # suspicious", "warn"] ] },
+      { cmd: "terraform plan && tfsec .", out: [
+        ["Plan: 6 to add, 0 to change", ""],
+        ["tfsec: no problems detected", "ok"] ] },
+      { cmd: "cosign verify --key cosign.pub app:1.4", out: [
+        ["Verified OK", "ok"],
+        ["signature: valid  attestations: 2", "ok"] ] },
+      { cmd: "volatility -f mem.raw windows.pslist", out: [
+        ["PID   PPID  ImageFileName", ""],
+        ["4012  680   rundll32.exe   # injected", "warn"] ] }
     ];
 
     const codeTimers = [];
@@ -947,72 +948,93 @@
       const columnCount = width < 680 ? 2 : Math.max(3, Math.floor(width / 300));
       const spacing = 100 / columnCount;
 
-      // clear any running typing timers from a previous build (e.g. on resize)
+      // clear any running timers from a previous build (e.g. on resize)
       while (codeTimers.length) clearTimeout(codeTimers.pop());
       backdrop.innerHTML = "";
 
-      // enough lines to fill the full viewport height (line-height ~17px), plus buffer
-      const lineHeightPx = 12 * 1.42;
-      const linesNeeded = Math.ceil(window.innerHeight / lineHeightPx) + 6;
+      const lineHeightPx = 12 * 1.5;
+      const maxLines = Math.ceil(window.innerHeight / lineHeightPx) + 2;
 
       for (let i = 0; i < columnCount; i++) {
         const col = document.createElement("div");
         col.className = "code-column";
         col.style.left = `${(i * spacing + 2).toFixed(2)}%`;
-        const lines = Array.from(
-          { length: linesNeeded },
-          (_, idx) => codeLines[(idx + i * 5) % codeLines.length]
-        );
-        const fullText = lines.join("\n");
-        typeCodeColumn(col, fullText, i * 140);
         backdrop.appendChild(col);
+        // each column starts at a different point in the session and is desynced
+        runTerminal(col, i % codeSession.length, maxLines, 260 + i * 220);
       }
     }
 
-    function typeCodeColumn(element, text, delay) {
-      const typingSpeed = 6;   // ms per char
-      const holdAfterFull = 2600; // pause once a column is full before rewriting
-      let index = 0;
+    // Render a continuous shell: type the command, print its output, advance.
+    // Lines accumulate at the bottom (CSS justify-content:flex-end); we trim the
+    // top so the log "scrolls" like a real terminal.
+    function runTerminal(col, startIdx, maxLines, startDelay) {
+      const lines = [];        // committed DOM lines (HTML strings)
+      let idx = startIdx;
 
-      function typeCharacter() {
-        if (index < text.length) {
-          element.textContent = text.substring(0, index + 1);
-          index++;
-          codeTimers.push(setTimeout(typeCharacter, typingSpeed));
-        } else {
-          // keep it visible, then clear and re-type so code keeps "getting written"
-          element.textContent = text;
-          codeTimers.push(setTimeout(() => {
-            index = 0;
-            element.textContent = "";
-            typeCharacter();
-          }, holdAfterFull));
-        }
+      const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const paint = (typingHtml) => {
+        const body = lines.join("");
+        col.innerHTML = body + (typingHtml || "");
+        if (lines.length > maxLines) lines.splice(0, lines.length - maxLines);
+      };
+      const commit = (html) => { lines.push(html); if (lines.length > maxLines) lines.shift(); };
+      const wait = (ms, fn) => codeTimers.push(setTimeout(fn, ms));
+
+      function typeCmd() {
+        const entry = codeSession[idx % codeSession.length];
+        const full = entry.cmd;
+        let c = 0;
+        (function step() {
+          const typed = esc(full.slice(0, c));
+          paint(`<div class="cmd cur"><span class="pmt">$</span> ${typed}</div>`);
+          if (c < full.length) {
+            c++;
+            wait(34 + Math.random() * 26, step);   // human-ish typing cadence
+          } else {
+            // commit the finished command line (no caret), then print output
+            commit(`<div class="cmd"><span class="pmt">$</span> ${esc(full)}</div>`);
+            paint("");
+            printOut(entry.out, 0);
+          }
+        })();
       }
 
-      codeTimers.push(setTimeout(typeCharacter, delay));
+      function printOut(out, k) {
+        if (k >= out.length) {
+          // blank spacer line, then next command after a short beat
+          commit(`<div class="out">&nbsp;</div>`);
+          paint("");
+          idx++;
+          wait(900, typeCmd);
+          return;
+        }
+        const [text, cls] = out[k];
+        commit(`<div class="out ${cls || ""}">${esc(text)}</div>`);
+        paint("");
+        wait(150 + Math.random() * 160, () => printOut(out, k + 1));
+      }
+
+      wait(startDelay, typeCmd);
     }
 
     function onScrollBackdrop() {
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const progress = Math.min(1, window.scrollY / maxScroll);
-      const zoom = 1 + progress * 0.62;
-      const crunchX = progress > 0.86 ? 1 - ((progress - 0.86) / 0.14) * 0.34 : 1;
-      const crunchY = progress > 0.86 ? 1 + ((progress - 0.86) / 0.14) * 0.18 : 1;
-      const opacity = 0.4 + progress * 0.12;
+      const zoom = 1 + progress * 0.16;          // gentle zoom (was 0.62)
+      const opacity = 0.4 + progress * 0.1;
 
-      // No downward parallax: the backdrop is fixed and fills the viewport, so the
-      // code stays visible across the whole page. We only zoom (and shake at the end).
+      // Backdrop is fixed and fills the viewport; code stays visible across the
+      // whole page. Only a subtle zoom, and a calm settle near the very end.
       backdrop.style.setProperty("--zoom", zoom.toFixed(3));
       backdrop.style.opacity = opacity.toFixed(3);
       if (!backdrop.classList.contains("terminal")) {
-        backdrop.style.transform = `scale(${(zoom * crunchX).toFixed(3)}, ${(zoom * crunchY).toFixed(3)})`;
+        backdrop.style.transform = `scale(${zoom.toFixed(3)})`;
       }
 
-      if (progress > 0.75) {
+      if (progress > 0.9) {
         backdrop.classList.add("terminal");
-        const terminalIntensity = Math.min(2, 1 + (progress - 0.75) * 4);
-        backdrop.style.filter = `contrast(${(1.45 * terminalIntensity).toFixed(2)}) saturate(${(1.3 * terminalIntensity).toFixed(2)}) blur(${(0.4 * (progress - 0.75)).toFixed(2)}px)`;
+        backdrop.style.filter = "contrast(1.08) saturate(1.1)";
       } else {
         backdrop.classList.remove("terminal");
         backdrop.style.filter = "none";
@@ -1034,18 +1056,26 @@
       if (!tunnelStage) return;
       tunnelStage.style.setProperty("--drum-rot", `${drumRotation.toFixed(2)}deg`);
 
-      // The panel whose face is closest to the camera (front of the drum) is "active".
-      // A panel faces front when (drumRotation + index*step) is a multiple of 360.
+      // Fade panels by how far they are (in degrees) from the front of the drum.
+      // On narrow screens the cutoff is tight so neighbours (45deg away) are fully
+      // hidden — you see one photo at a time, no "half of the next picture".
+      // On desktop the cutoff is wide so the full drum is visible.
+      const narrow = window.innerWidth < 760;
+      const cutoff = narrow ? 40 : 96;   // degrees of visibility on each side
+
       let activeIndex = 0;
       let bestFront = -Infinity;
       tunnelCards.forEach((card, index) => {
         const angle = (drumRotation + index * drumStep) * Math.PI / 180;
-        const front = Math.cos(angle); // 1 = facing camera, -1 = behind
-        // Dim and shrink panels on the back of the drum for depth.
-        const depth = 0.45 + 0.55 * (front * 0.5 + 0.5);
-        card.style.opacity = depth.toFixed(3);
-        card.style.filter = `brightness(${(0.6 + 0.4 * (front * 0.5 + 0.5)).toFixed(3)})`;
+        const front = Math.cos(angle);              // 1 = facing camera, -1 = behind
+        const deg = Math.acos(Math.max(-1, Math.min(1, front))) * 180 / Math.PI; // 0..180
+        const vis = clamp(1 - deg / cutoff, 0, 1);  // 1 at front, 0 past the cutoff
+        const frontN = front * 0.5 + 0.5;
+        card.style.opacity = (Math.pow(vis, 1.3) * (narrow ? 1 : 0.95) + (narrow ? 0 : 0.05)).toFixed(3);
+        card.style.setProperty("--card-scale", (0.86 + 0.14 * frontN).toFixed(3));
+        card.style.filter = `brightness(${(0.64 + 0.36 * frontN).toFixed(3)})`;
         card.style.zIndex = String(1000 + Math.round(front * 1000));
+        card.style.pointerEvents = vis > 0.6 ? "auto" : "none";  // only click the clear ones
         if (front > bestFront) { bestFront = front; activeIndex = index; }
         card.dataset.active = "false";
       });
@@ -1176,6 +1206,7 @@
     renderDrum();
     drumTick();
     window.addEventListener("resize", buildBackdrop);
+    window.addEventListener("resize", renderDrum);
     window.addEventListener("scroll", onScrollBackdrop, { passive: true });
 
   </script>
