@@ -30,33 +30,7 @@
       padding: 18px;
       overflow-x: hidden;
     }
-    .code-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.12;
-      overflow: hidden;
-    }
-    .code-column {
-      position: absolute;
-      top: -20%;
-      width: 18px;
-      color: #59e0ff;
-      font-size: 11px;
-      line-height: 1.05;
-      white-space: pre;
-      text-shadow: 0 0 10px rgba(55, 212, 255, 0.5);
-      animation: codefall linear infinite;
-      user-select: none;
-    }
-    @keyframes codefall {
-      from { transform: translateY(-12%); }
-      to { transform: translateY(125vh); }
-    }
     .wrap {
-      position: relative;
-      z-index: 1;
       max-width: 1020px;
       margin: 0 auto;
     }
@@ -181,7 +155,6 @@
   </style>
 </head>
 <body>
-  <div class="code-backdrop" id="codeBackdrop" aria-hidden="true"></div>
   <div class="wrap">
     <div class="topbar">
       <a class="brand" href="../index.html">IBRAHIM SULTAN</a>
@@ -284,31 +257,5 @@ Get-MgReportAuthenticationMethodUserRegistrationDetail |
     </footer>
   </div>
 
-  <script>
-    const backdrop = document.getElementById("codeBackdrop");
-    const codeLines = [
-      "01001000 01101000 01100101 01110010 01100101",
-      "curl -fsSL https://example.com | bash",
-      "nmap -sV -Pn target.example",
-      "tcpdump -ni any host app.example.com",
-      "openssl s_client -connect host:443",
-      "ssh -J bastion internal-host",
-      "jwt.decode(token)",
-      "siem.query('suspicious-auth')",
-      "EDR: isolate host",
-      "ZTNA: verify context",
-      "IAM: least privilege",
-      "DLP: classify and alert"
-    ];
-    for (let i = 0; i < 18; i++) {
-      const col = document.createElement("div");
-      col.className = "code-column";
-      col.style.left = `${(i * 5.5) % 100}%`;
-      col.style.animationDuration = `${11 + (i % 5) * 2.5}s`;
-      col.style.animationDelay = `${-(i * 0.6)}s`;
-      col.textContent = Array.from({ length: 22 }, (_, idx) => codeLines[(idx + i) % codeLines.length]).join("\n");
-      backdrop.appendChild(col);
-    }
-  </script>
 </body>
 </html>
