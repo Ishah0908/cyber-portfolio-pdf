@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ibrahim Sultan | Cybersecurity Archive</title>
-  <meta name="description" content="Cybersecurity PDF archive by Ibrahim Sultan" />
+  <meta name="description" content="Ibrahim Sultan personal cybersecurity portfolio, handbooks, and blog" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
@@ -169,6 +169,96 @@
       flex-wrap: wrap;
     }
 
+    .about {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 16px 16px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+    }
+    .about-card {
+      border: 1px solid rgba(55, 212, 255, 0.55);
+      background: var(--glass);
+      padding: 16px;
+      box-shadow: 0 0 16px rgba(55, 212, 255, 0.2), inset 0 0 10px rgba(55, 212, 255, 0.08);
+    }
+    .about-title {
+      font-family: "Orbitron", sans-serif;
+      color: #dff6ff;
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .about-copy {
+      color: #b7dce9;
+      font-size: 0.9rem;
+      line-height: 1.72;
+      margin-bottom: 10px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .chip {
+      border: 1px solid rgba(55, 212, 255, 0.45);
+      color: #d9f4ff;
+      padding: 0.25rem 0.45rem;
+      font-size: 0.74rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(7, 20, 33, 0.55);
+    }
+
+    .family {
+      max-width: 1100px;
+      margin: 8px auto 0;
+      padding: 8px 16px 16px;
+    }
+    .family-head {
+      border: 1px solid rgba(55, 212, 255, 0.55);
+      background: var(--glass);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .family-title {
+      font-family: "Orbitron", sans-serif;
+      color: #dff6ff;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+    }
+    .family-copy {
+      margin-top: 8px;
+      color: #b7dce9;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .shot {
+      border: 1px solid rgba(55, 212, 255, 0.45);
+      background: rgba(2, 12, 20, 0.7);
+      padding: 6px;
+    }
+    .shot img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+    }
+    .cap {
+      margin-top: 6px;
+      color: #a8d8e8;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
     .hub {
       max-width: 1100px;
       margin: 8px auto 0;
@@ -232,9 +322,15 @@
 
     @media (max-width: 700px) {
       .code-column {
-        width: 46vw;
+        width: 44vw;
         font-size: 10px;
         line-height: 1.35;
+      }
+      .about {
+        grid-template-columns: 1fr;
+      }
+      .shot img {
+        height: 220px;
       }
       .status {
         width: calc(100% - 24px);
@@ -268,12 +364,66 @@
 
     <section class="intro">
       <p>
-        This is now your main hub for public cybersecurity writing. Your full handbook collection and blog are already live,
-        and every update pushed to GitHub deploys automatically on Vercel.
+        Ibrahim Sultan is a cybersecurity engineer with nearly a decade of hands-on experience in security operations,
+        architecture, cloud defense, and identity governance across enterprise environments.
       </p>
       <div class="intro-actions">
         <a class="btn" href="blog/">Open Public Blog</a>
         <a class="btn" href="blog/handbooks/">Open Handbook Library</a>
+      </div>
+    </section>
+
+    <section class="about" aria-label="About Ibrahim Sultan">
+      <article class="about-card">
+        <h2 class="about-title">About Ibrahim Sultan</h2>
+        <p class="about-copy">
+          I am Ibrahim Sultan. I hold a Masters in Computer Application and a Masters in Information Systems Security
+          from University of the Cumberlands. I have spent almost a decade in cybersecurity, building practical security
+          programs that combine strong engineering with real-world operations.
+        </p>
+        <p class="about-copy">
+          Beyond cybersecurity, I love travelling and building electronics from scratch, including drone projects and an AI-powered
+          robotic mini car designed to navigate rough outdoor trails and wooded paths. I enjoy turning ideas into working prototypes,
+          then hardening them with secure-by-design principles.
+        </p>
+        <div class="chips">
+          <span class="chip">Cybersecurity (10 Years)</span>
+          <span class="chip">Cloud & Identity Security</span>
+          <span class="chip">Threat Detection</span>
+          <span class="chip">Drone & Robotics Builder</span>
+        </div>
+      </article>
+      <article class="about-card">
+        <h2 class="about-title">Core Focus Areas</h2>
+        <p class="about-copy">Zero Trust architecture, SOC engineering, IAM/PAM/IGA governance, cloud hardening, DLP, incident response, and resilient security automation.</p>
+        <p class="about-copy">This site combines my professional handbooks, technical blog posts, and personal builder journey to show how I approach security with depth, precision, and creativity.</p>
+        <div class="chips">
+          <span class="chip">Zero Trust</span>
+          <span class="chip">SIEM / SOAR</span>
+          <span class="chip">IAM / PAM / IGA</span>
+          <span class="chip">SASE / ZTNA</span>
+          <span class="chip">Cloud Security</span>
+          <span class="chip">DLP</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="family" aria-label="Family Gallery">
+      <div class="family-head">
+        <h2 class="family-title">Family and Journey</h2>
+        <p class="family-copy">
+          My two sons, Abdullah and Mustafa, are a huge inspiration in my life. This section captures family moments and the journey behind the work.
+        </p>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><img src="assets/photos/IMG_0717.jpg" alt="Ibrahim Sultan portrait" /><figcaption class="cap">Ibrahim Sultan</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_1108.jpg" alt="Ibrahim Sultan portrait" /><figcaption class="cap">Portrait</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6464.JPG" alt="Family moment" /><figcaption class="cap">Family Moment</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6466.JPG" alt="Family moment" /><figcaption class="cap">Family Moment</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6468.JPG" alt="Family moment" /><figcaption class="cap">Abdullah and Mustafa</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6471.JPG" alt="Family moment" /><figcaption class="cap">Family Moment</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6473.JPG" alt="Family moment" /><figcaption class="cap">Family Moment</figcaption></figure>
+        <figure class="shot"><img src="assets/photos/IMG_6498.jpg" alt="Family moment" /><figcaption class="cap">Family Moment</figcaption></figure>
       </div>
     </section>
 
@@ -333,13 +483,13 @@
 
     function buildBackdrop() {
       const width = window.innerWidth;
-      const columnCount = Math.max(4, Math.floor(width / 220));
+      const columnCount = width < 680 ? 2 : Math.max(3, Math.floor(width / 300));
       const spacing = 100 / columnCount;
       backdrop.innerHTML = "";
       for (let i = 0; i < columnCount; i++) {
         const col = document.createElement("div");
         col.className = "code-column";
-        col.style.left = `${(i * spacing + 1.2).toFixed(2)}%`;
+        col.style.left = `${(i * spacing + 2).toFixed(2)}%`;
         col.style.animationDuration = `${18 + (i % 5) * 2.8}s`;
         col.style.animationDelay = `${-(i * 0.82)}s`;
         col.textContent = Array.from(
