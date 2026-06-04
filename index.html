@@ -164,13 +164,46 @@
     }
     @keyframes spin360 { to { transform: rotate(360deg); } }
 
+    /* energy leads: the reactor feeds current into the border wiring loop */
+    .reactor-lead {
+      position: fixed;
+      z-index: 31;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(55, 212, 255, 0.6);
+    }
+    .reactor-lead.v {        /* up the left edge */
+      left: 7px;
+      bottom: 7px;
+      width: 2px;
+      height: 150px;
+      background: linear-gradient(to top, transparent, #6fe6ff, transparent);
+      background-size: 100% 50%;
+      background-repeat: no-repeat;
+      animation: leadUp 2.1s linear infinite;
+    }
+    .reactor-lead.h {        /* right along the bottom edge */
+      left: 7px;
+      bottom: 7px;
+      height: 2px;
+      width: 150px;
+      background: linear-gradient(to right, transparent, #6fe6ff, transparent);
+      background-size: 50% 100%;
+      background-repeat: no-repeat;
+      animation: leadRight 2.1s linear infinite;
+    }
+    @keyframes leadUp    { 0% { background-position: 0 120%; } 100% { background-position: 0 -20%; } }
+    @keyframes leadRight { 0% { background-position: -20% 0; } 100% { background-position: 120% 0; } }
+
     @media (prefers-reduced-motion: reduce) {
       .power-frame::before, .power-frame::after, .power-bolt,
       .arc-reactor, .arc-reactor::before { animation: none; }
     }
-    /* on narrow screens content spans full width — hide the reactor so it never overlaps */
+    /* on narrow screens content spans full width — hide the reactor + leads so nothing overlaps */
     @media (max-width: 760px) {
-      .arc-reactor { display: none; }
+      .arc-reactor, .reactor-lead { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reactor-lead { animation: none; }
     }
 
     .code-backdrop {
@@ -828,6 +861,8 @@
   <span class="power-bolt tl" aria-hidden="true"></span>
   <span class="power-bolt tr" aria-hidden="true"></span>
   <span class="power-bolt br" aria-hidden="true"></span>
+  <span class="reactor-lead v" aria-hidden="true"></span>
+  <span class="reactor-lead h" aria-hidden="true"></span>
   <div class="arc-reactor" aria-hidden="true" title="Arc Reactor // powering this page"></div>
 
   <div class="status">SYS <span class="rec">●</span> ONLINE · AES-256 · ◉ <span class="rec">REC</span></div>
