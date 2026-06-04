@@ -286,6 +286,7 @@
       perspective: 2100px;
       perspective-origin: center 38%;
       overflow: hidden;
+      touch-action: none;
     }
     .tunnel-stage {
       position: relative;
@@ -312,6 +313,53 @@
       color: #eefaff;
       font-weight: 700;
     }
+    .tunnel-controls {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .tunnel-control-btn {
+      pointer-events: auto;
+      border: 1px solid rgba(78, 225, 255, 0.52);
+      background: rgba(4, 14, 24, 0.78);
+      color: #e6fbff;
+      min-width: 42px;
+      min-height: 42px;
+      font: inherit;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(55, 212, 255, 0.16);
+    }
+    .tunnel-control-btn:hover,
+    .tunnel-control-btn:focus-visible {
+      border-color: rgba(179, 239, 255, 0.92);
+      box-shadow: 0 0 24px rgba(55, 212, 255, 0.28);
+      outline: none;
+    }
+    .tunnel-progress {
+      flex: 1;
+      height: 7px;
+      border: 1px solid rgba(78, 225, 255, 0.35);
+      background: rgba(7, 21, 33, 0.72);
+      box-shadow: inset 0 0 12px rgba(55, 212, 255, 0.08);
+      overflow: hidden;
+    }
+    .tunnel-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(55, 212, 255, 0.9), rgba(255, 182, 72, 0.86));
+      box-shadow: 0 0 20px rgba(55, 212, 255, 0.42);
+      transition: width 120ms ease;
+    }
     .tunnel-card {
       position: absolute;
       top: 50%;
@@ -326,7 +374,7 @@
       padding: 0;
       cursor: pointer;
       backdrop-filter: blur(6px);
-      transition: box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+      transition: box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease, opacity 180ms ease;
     }
     .tunnel-card:hover,
     .tunnel-card:focus-visible {
@@ -585,6 +633,15 @@
         right: 14px;
         font-size: 0.58rem;
       }
+      .tunnel-controls {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+      }
+      .tunnel-control-btn {
+        min-width: 38px;
+        min-height: 38px;
+      }
       .enhance-panel {
         padding: 14px;
       }
@@ -689,7 +746,7 @@
         <div class="tunnel-viewport">
           <div class="tunnel-hud" aria-hidden="true">
             <span>Archive Path <strong>Data Tunnel</strong></span>
-            <span>Click Frame <strong>Enhance</strong></span>
+            <span>Wheel / Drag <strong>Navigate</strong></span>
           </div>
           <div class="tunnel-stage" id="tunnelStage">
             <button class="tunnel-card" type="button" data-title="Me and Abdullah - My Heart, My Strength" data-frame="Frame 01" data-image="assets/photos/c8c7b0b5-55df-43a4-a26e-4049b4f60a35.JPG" aria-label="Open Me and Abdullah image">
@@ -741,6 +798,11 @@
               <span class="tunnel-label"><span>Road Trip</span><span>Transit Memory</span></span>
             </button>
           </div>
+          <div class="tunnel-controls" aria-label="Tunnel navigation controls">
+            <button class="tunnel-control-btn" type="button" id="tunnelPrev" aria-label="Previous photo">◀</button>
+            <div class="tunnel-progress" aria-hidden="true"><div class="tunnel-progress-fill" id="tunnelProgressFill"></div></div>
+            <button class="tunnel-control-btn" type="button" id="tunnelNext" aria-label="Next photo">▶</button>
+          </div>
         </div>
       </div>
     </section>
@@ -785,11 +847,20 @@
   <script>
     const backdrop = document.getElementById("codeBackdrop");
     const tunnelSection = document.getElementById("dataTunnel");
+    const tunnelViewport = tunnelSection ? tunnelSection.querySelector(".tunnel-viewport") : null;
     const tunnelCards = Array.from(document.querySelectorAll(".tunnel-card"));
+    const tunnelProgressFill = document.getElementById("tunnelProgressFill");
+    const tunnelPrev = document.getElementById("tunnelPrev");
+    const tunnelNext = document.getElementById("tunnelNext");
     const enhanceModal = document.getElementById("enhanceModal");
     const enhanceImage = document.getElementById("enhanceImage");
     const enhanceCaption = document.getElementById("enhanceCaption");
     const enhanceClose = document.getElementById("enhanceClose");
+    let tunnelProgress = 0;
+    let hoverIndex = -1;
+    let dragActive = false;
+    let dragStartY = 0;
+    let dragStartProgress = 0;
     const codeLines = [
       "falco -c /etc/falco/falco.yaml",
       "tetragon run --config tetragon.yaml",
@@ -862,16 +933,27 @@
       }
     }
 
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function stepToProgress(index) {
+      if (tunnelCards.length <= 1) {
+        tunnelProgress = 0;
+        return;
+      }
+      tunnelProgress = clamp(index / (tunnelCards.length - 1), 0, 1);
+      updateTunnel();
+    }
+
     function updateTunnel() {
       if (!tunnelSection || tunnelCards.length === 0) {
         return;
       }
 
-      const rect = tunnelSection.getBoundingClientRect();
-      const viewport = window.innerHeight || 1;
-      const progress = Math.min(1, Math.max(0, (viewport * 0.58 - rect.top) / Math.max(1, rect.height - viewport * 0.24)));
-      const eased = progress * progress * (3 - 2 * progress);
+      const eased = tunnelProgress * tunnelProgress * (3 - 2 * tunnelProgress);
       const center = (tunnelCards.length - 1) / 2;
+      const activeIndex = Math.round(eased * (tunnelCards.length - 1));
 
       tunnelCards.forEach((card, index) => {
         const distance = index - center;
@@ -881,16 +963,22 @@
         const vertical = distance * distance * 12 - eased * 68 + Math.cos((eased * 2 + index * 0.15) * Math.PI) * 10 + (index % 2 === 0 ? -16 : 16);
         const rotateY = distance * -9 - 14 + eased * 22;
         const rotateX = -9 + nearFactor * 10;
-        const scale = 0.7 + nearFactor * 0.48 + eased * 0.04;
+        const isHovered = index === hoverIndex;
+        const isActive = index === activeIndex;
+        const scale = 0.7 + nearFactor * 0.48 + eased * 0.04 + (isHovered ? 0.12 : 0) + (isActive ? 0.03 : 0);
         const opacity = 0.16 + nearFactor * 0.9;
-        const highlightIndex = Math.round(eased * (tunnelCards.length - 1));
+        const hoverLift = isHovered ? 120 : 0;
 
-        card.style.transform = `translate3d(${lateral}px, ${vertical}px, ${depth}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
+        card.style.transform = `translate3d(${lateral}px, ${vertical}px, ${depth + hoverLift}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
         card.style.opacity = opacity.toFixed(3);
-        card.style.zIndex = String(1000 + Math.round(nearFactor * 1000));
-        card.style.filter = index === highlightIndex ? "brightness(1.05) saturate(1.12)" : `brightness(${(0.78 + nearFactor * 0.22).toFixed(3)}) saturate(${(0.86 + nearFactor * 0.18).toFixed(3)})`;
-        card.dataset.active = String(index === highlightIndex);
+        card.style.zIndex = String(1000 + Math.round(nearFactor * 1000) + (isHovered ? 600 : 0));
+        card.style.filter = isActive || isHovered ? "brightness(1.08) saturate(1.18)" : `brightness(${(0.78 + nearFactor * 0.22).toFixed(3)}) saturate(${(0.86 + nearFactor * 0.18).toFixed(3)})`;
+        card.dataset.active = String(isActive);
       });
+
+      if (tunnelProgressFill) {
+        tunnelProgressFill.style.width = `${(tunnelProgress * 100).toFixed(1)}%`;
+      }
     }
 
     function openEnhance(card) {
@@ -908,9 +996,79 @@
       document.body.style.overflow = "";
     }
 
-    tunnelCards.forEach((card) => {
-      card.addEventListener("click", () => openEnhance(card));
+    tunnelCards.forEach((card, index) => {
+      card.addEventListener("mouseenter", () => {
+        hoverIndex = index;
+        updateTunnel();
+      });
+      card.addEventListener("mouseleave", () => {
+        hoverIndex = -1;
+        updateTunnel();
+      });
+      card.addEventListener("focus", () => {
+        hoverIndex = index;
+        updateTunnel();
+      });
+      card.addEventListener("blur", () => {
+        hoverIndex = -1;
+        updateTunnel();
+      });
+      card.addEventListener("click", () => {
+        stepToProgress(index);
+        openEnhance(card);
+      });
     });
+
+    if (tunnelViewport) {
+      tunnelViewport.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        tunnelProgress = clamp(tunnelProgress + event.deltaY * 0.00075, 0, 1);
+        updateTunnel();
+      }, { passive: false });
+
+      tunnelViewport.addEventListener("pointerdown", (event) => {
+        dragActive = true;
+        dragStartY = event.clientY;
+        dragStartProgress = tunnelProgress;
+        tunnelViewport.setPointerCapture(event.pointerId);
+      });
+
+      tunnelViewport.addEventListener("pointermove", (event) => {
+        if (!dragActive) {
+          return;
+        }
+        const delta = dragStartY - event.clientY;
+        tunnelProgress = clamp(dragStartProgress + delta * 0.0012, 0, 1);
+        updateTunnel();
+      });
+
+      const endDrag = (event) => {
+        if (!dragActive) {
+          return;
+        }
+        dragActive = false;
+        if (event && tunnelViewport.hasPointerCapture(event.pointerId)) {
+          tunnelViewport.releasePointerCapture(event.pointerId);
+        }
+      };
+
+      tunnelViewport.addEventListener("pointerup", endDrag);
+      tunnelViewport.addEventListener("pointercancel", endDrag);
+    }
+
+    if (tunnelPrev) {
+      tunnelPrev.addEventListener("click", () => {
+        const currentIndex = Math.round(tunnelProgress * (tunnelCards.length - 1));
+        stepToProgress(Math.max(0, currentIndex - 1));
+      });
+    }
+
+    if (tunnelNext) {
+      tunnelNext.addEventListener("click", () => {
+        const currentIndex = Math.round(tunnelProgress * (tunnelCards.length - 1));
+        stepToProgress(Math.min(tunnelCards.length - 1, currentIndex + 1));
+      });
+    }
 
     enhanceClose.addEventListener("click", closeEnhance);
     enhanceModal.addEventListener("click", (event) => {
@@ -926,6 +1084,7 @@
 
     buildBackdrop();
     onScrollBackdrop();
+    tunnelProgress = 0.08;
     updateTunnel();
     window.addEventListener("resize", buildBackdrop);
     window.addEventListener("scroll", onScrollBackdrop, { passive: true });
