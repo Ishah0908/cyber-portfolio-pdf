@@ -48,16 +48,17 @@
     .code-column {
       position: absolute;
       top: -45vh;
-      width: 28px;
+      width: 210px;
       color: #59e0ff;
-      font-size: 11px;
-      line-height: 1.55;
+      font-size: 12px;
+      line-height: 1.42;
       letter-spacing: 0.01em;
-      white-space: pre;
+      white-space: pre-wrap;
+      overflow: hidden;
       text-shadow: 0 0 9px rgba(55, 212, 255, 0.35);
       animation: codefall linear infinite;
       user-select: none;
-      opacity: 0.82;
+      opacity: 0.78;
     }
     @keyframes codefall {
       from { transform: translateY(0); }
@@ -168,50 +169,41 @@
       flex-wrap: wrap;
     }
 
-    .grid {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 16px;
+    .hub {
+      max-width: 1100px;
+      margin: 8px auto 0;
+      padding: 10px 16px 24px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 14px;
     }
-
-    .card {
-      position: relative;
+    .hub-card {
       border: 1px solid rgba(55, 212, 255, 0.55);
       background: var(--glass);
-      padding: 14px;
-      box-shadow: 0 0 16px rgba(55, 212, 255, 0.22), inset 0 0 10px rgba(55, 212, 255, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 16px;
+      box-shadow: 0 0 16px rgba(55, 212, 255, 0.2), inset 0 0 10px rgba(55, 212, 255, 0.08);
     }
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 26px rgba(55, 212, 255, 0.55), inset 0 0 12px rgba(55, 212, 255, 0.12);
-    }
-
-    .tag {
+    .hub-kicker {
       color: var(--gold);
       font-size: 0.73rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
-    .title {
+    .hub-title {
       margin-top: 0.35rem;
       font-family: "Orbitron", sans-serif;
       color: #dff6ff;
-      font-size: 0.98rem;
-      line-height: 1.45;
+      font-size: 1rem;
+      line-height: 1.4;
     }
-    .desc {
+    .hub-desc {
       margin-top: 0.45rem;
       color: #b5dbe8;
-      font-size: 0.84rem;
-      min-height: 48px;
+      font-size: 0.88rem;
+      line-height: 1.6;
     }
-
-    .actions {
-      margin-top: 0.75rem;
+    .hub-actions {
+      margin-top: 0.9rem;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -227,17 +219,6 @@
       text-transform: uppercase;
     }
 
-    .notice {
-      max-width: 1180px;
-      margin: 14px auto;
-      padding: 12px 16px;
-      border: 1px dashed rgba(255, 182, 72, 0.55);
-      color: #f4d8a5;
-      background: rgba(50, 28, 8, 0.3);
-      font-size: 0.88rem;
-      line-height: 1.6;
-    }
-
     footer {
       margin-top: 24px;
       text-align: center;
@@ -251,9 +232,9 @@
 
     @media (max-width: 700px) {
       .code-column {
-        width: 24px;
+        width: 46vw;
         font-size: 10px;
-        line-height: 1.45;
+        line-height: 1.35;
       }
       .status {
         width: calc(100% - 24px);
@@ -287,21 +268,33 @@
 
     <section class="intro">
       <p>
-        This version is PDF-first: every card points to a PDF in the <strong>pdfs/</strong> folder.
-        When you send your final PDFs, drop them into that folder and edit the manifest in this file.
-        Hosting flow is built for GitHub to Vercel (free).
+        This is now your main hub for public cybersecurity writing. Your full handbook collection and blog are already live,
+        and every update pushed to GitHub deploys automatically on Vercel.
       </p>
       <div class="intro-actions">
         <a class="btn" href="blog/">Open Public Blog</a>
-        <a class="btn" href="https://hashnode.com" target="_blank" rel="noopener">Mirror to Hashnode</a>
+        <a class="btn" href="blog/handbooks/">Open Handbook Library</a>
       </div>
     </section>
 
-    <div class="notice">
-      Placeholder entries are below so the layout is ready now. Replace file names once your PDFs are available.
-    </div>
-
-    <main id="pdfGrid" class="grid"></main>
+    <section class="hub" aria-label="Main Navigation">
+      <article class="hub-card">
+        <div class="hub-kicker">Library</div>
+        <h2 class="hub-title">Complete Cybersecurity Handbooks</h2>
+        <p class="hub-desc">Seven full handbooks: Zero Trust, Cloud Hardening, SIEM/SOAR, Endpoint Hunting, IAM/PAM/IGA, DLP, and SASE/ZTNA.</p>
+        <div class="hub-actions">
+          <a class="btn" href="blog/handbooks/" target="_blank" rel="noopener">Open</a>
+        </div>
+      </article>
+      <article class="hub-card">
+        <div class="hub-kicker">Articles</div>
+        <h2 class="hub-title">Blog and Field Notes</h2>
+        <p class="hub-desc">Public posts, tactical implementation notes, and practical detection and hardening walkthroughs.</p>
+        <div class="hub-actions">
+          <a class="btn" href="blog/" target="_blank" rel="noopener">Open</a>
+        </div>
+      </article>
+    </section>
 
     <footer>
       [I.B.R.A.H.I.M. SECURE INTERFACE v4.1 · PDF EDITION] · POWERED BY ARC REACTOR · STAY PATCHED
@@ -311,46 +304,46 @@
   <script>
     const backdrop = document.getElementById("codeBackdrop");
     const codeLines = [
-      "sudo ufw default deny incoming",
-      "sudo ufw allow 22/tcp && sudo ufw enable",
-      "sudo fail2ban-client status sshd",
-      "sudo ss -tulpen | grep LISTEN",
-      "sudo auditctl -l",
-      "sudo ausearch -m USER_LOGIN -ts today",
-      "sudo osqueryi 'SELECT * FROM processes LIMIT 5;'",
-      "sudo yara -r rules/malware.yar /opt/uploads",
-      "sudo suricata -T -c /etc/suricata/suricata.yaml",
+      "ufw default deny incoming",
+      "ufw allow 22/tcp",
+      "fail2ban-client status sshd",
+      "ss -tulpen | grep LISTEN",
+      "auditctl -l",
+      "ausearch -m USER_LOGIN -ts today",
+      "osqueryi SELECT pid,name FROM processes",
+      "yara -r rules/malware.yar /opt/uploads",
+      "suricata -T -c /etc/suricata/suricata.yaml",
       "zeek -i eth0 local",
-      "trivy image --severity HIGH,CRITICAL app:latest",
+      "trivy image --severity HIGH,CRITICAL app",
       "semgrep --config auto src/",
-      "cosign verify --key cosign.pub ghcr.io/org/app:latest",
+      "cosign verify --key cosign.pub image",
       "kubectl get networkpolicy -A",
       "kubectl auth can-i --list",
       "gcloud projects get-iam-policy PROJECT_ID",
       "jq '.bindings[] | .role' iam-policy.json",
       "openssl s_client -connect app.example.com:443",
-      "nmap -sV --script vuln --script-timeout 30s target",
-      "tcpdump -ni any port 443 and host app.example.com",
+      "nmap -sV --script vuln target",
+      "tcpdump -ni any port 443",
       "curl -I --tlsv1.3 https://app.example.com",
       "dig +dnssec app.example.com",
-      "python3 -m pip list --outdated",
+      "pip list --outdated",
       "npm audit --omit=dev",
       "terraform validate && terraform plan"
     ];
 
     function buildBackdrop() {
       const width = window.innerWidth;
-      const columnCount = Math.max(14, Math.floor(width / 64));
+      const columnCount = Math.max(4, Math.floor(width / 220));
       const spacing = 100 / columnCount;
       backdrop.innerHTML = "";
       for (let i = 0; i < columnCount; i++) {
         const col = document.createElement("div");
         col.className = "code-column";
-        col.style.left = `${(i * spacing).toFixed(2)}%`;
-        col.style.animationDuration = `${15 + (i % 7) * 2.2}s`;
+        col.style.left = `${(i * spacing + 1.2).toFixed(2)}%`;
+        col.style.animationDuration = `${18 + (i % 5) * 2.8}s`;
         col.style.animationDelay = `${-(i * 0.82)}s`;
         col.textContent = Array.from(
-          { length: 18 },
+          { length: 14 },
           (_, idx) => codeLines[(idx + (i * 3)) % codeLines.length]
         ).join("\n");
         backdrop.appendChild(col);
@@ -387,94 +380,6 @@
     window.addEventListener("resize", buildBackdrop);
     window.addEventListener("scroll", onScrollBackdrop, { passive: true });
 
-    const docs = [
-      {
-        frame: "00",
-        tag: "Zero Trust",
-        title: "Cybersecurity Field Handbooks Collection",
-        desc: "Complete 7-handbook defensive security collection: Zero Trust, Cloud, SIEM/SOAR, Endpoint, IAM/PAM, DLP, and SASE/ZTNA.",
-        file: "blog/handbooks/index.html"
-      },
-      {
-        frame: "01",
-        tag: "Network",
-        title: "Enterprise Network Security Operations",
-        desc: "Segmentation, hardening baselines, and attack-path reduction.",
-        file: "pdfs/network-security-ops.pdf"
-      },
-      {
-        frame: "02",
-        tag: "SASE",
-        title: "SASE and ZTNA Implementation Blueprint",
-        desc: "Identity-first access controls and branch-to-cloud architecture.",
-        file: "pdfs/sase-ztna-blueprint.pdf"
-      },
-      {
-        frame: "03",
-        tag: "IAM",
-        title: "IAM/PAM/IGA Defense Strategy",
-        desc: "Privileged workflows, access governance, and detection use-cases.",
-        file: "pdfs/iam-pam-iga.pdf"
-      },
-      {
-        frame: "04",
-        tag: "DLP",
-        title: "Data Loss Prevention Playbook",
-        desc: "Data classification, exfiltration controls, and incident handling.",
-        file: "pdfs/dlp-playbook.pdf"
-      },
-      {
-        frame: "05",
-        tag: "Cloud",
-        title: "Cloud Security Hardening",
-        desc: "AWS, Azure, GCP guardrails and runtime controls.",
-        file: "pdfs/cloud-security-hardening.pdf"
-      },
-      {
-        frame: "06",
-        tag: "SOC",
-        title: "SIEM and Detection Engineering",
-        desc: "Detection quality, tuning lifecycle, and SOAR automation patterns.",
-        file: "pdfs/siem-detection-engineering.pdf"
-      },
-      {
-        frame: "07",
-        tag: "IR",
-        title: "Incident Response and Threat Hunting",
-        desc: "Hunt hypotheses, triage flow, and containment execution.",
-        file: "pdfs/ir-threat-hunting.pdf"
-      },
-      {
-        frame: "08",
-        tag: "EDR",
-        title: "Endpoint Defense Operations",
-        desc: "Host-level telemetry, persistence checks, and response runbooks.",
-        file: "pdfs/endpoint-defense.pdf"
-      },
-      {
-        frame: "09",
-        tag: "Crypto",
-        title: "Practical Security Commands Compendium",
-        desc: "nmap, tcpdump, openssl, curl, jq, gpg, supply-chain and hardening references.",
-        file: "pdfs/security-commands.pdf"
-      }
-    ];
-
-    const grid = document.getElementById("pdfGrid");
-    for (const d of docs) {
-      const card = document.createElement("article");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="tag">${d.tag} · Frame ${d.frame}</div>
-        <h3 class="title">${d.title}</h3>
-        <p class="desc">${d.desc}</p>
-        <div class="actions">
-          <a class="btn" href="${d.file}" target="_blank" rel="noopener">Open</a>
-          <a class="btn" href="${d.file}" download>Download</a>
-        </div>
-      `;
-      grid.appendChild(card);
-    }
   </script>
 </body>
 </html>
