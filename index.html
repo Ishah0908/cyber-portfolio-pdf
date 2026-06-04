@@ -256,6 +256,14 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
+      /* gentle breathing zoom so the code slowly pulses in and out;
+         each column gets a desynced negative delay set in JS */
+      transform-origin: center bottom;
+      animation: codeBreathe 7s ease-in-out infinite;
+    }
+    @keyframes codeBreathe {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.022); }
     }
     .code-column .cmd { color: #8df0ff; }
     .code-column .cmd .pmt { color: #5ef38c; }      /* prompt $ */
@@ -907,9 +915,21 @@
       .enhance-panel {
         padding: 14px;
       }
+      /* sit the status banner + nav cleanly INSIDE the frame with an even gap,
+         so their rectangle no longer collides with / cuts the frame's top border */
       .status {
-        width: calc(100% - 24px);
+        top: 22px;
+        left: 22px;
+        right: 22px;
+        width: auto;
+        transform: none;
         text-align: center;
+      }
+      .top-nav {
+        top: 66px;
+        left: 22px;
+        right: 22px;
+        justify-content: center;
       }
     }
   </style>
@@ -1209,6 +1229,8 @@
         const col = document.createElement("div");
         col.className = "code-column";
         col.style.left = `${(i * spacing + 2).toFixed(2)}%`;
+        // desync the breathing zoom so columns pulse independently, not in lockstep
+        col.style.animationDelay = `${(-Math.random() * 7).toFixed(2)}s`;
         backdrop.appendChild(col);
         // each column starts at a different point in the session and is desynced
         runTerminal(col, i % codeSession.length, maxLines, 100 + i * 130);
@@ -1264,6 +1286,22 @@
         paint("");
         wait(70 + Math.random() * 90, () => printOut(out, k + 1));
       }
+
+      // Pre-seed the column with several commands already "run" so the page is
+      // full of terminal output at load instead of starting blank. We render the
+      // entries just BEFORE startIdx, so the live typing continues seamlessly.
+      function seed() {
+        const seedEntries = Math.min(codeSession.length - 1, Math.ceil(maxLines / 5) + 1);
+        for (let s = seedEntries; s >= 1; s--) {
+          const e = codeSession[((startIdx - s) % codeSession.length + codeSession.length) % codeSession.length];
+          lines.push(`<div class="cmd"><span class="pmt">$</span> ${esc(e.cmd)}</div>`);
+          e.out.forEach(([t, c]) => lines.push(`<div class="out ${c || ""}">${esc(t)}</div>`));
+          lines.push(`<div class="out">&nbsp;</div>`);
+        }
+        if (lines.length > maxLines) lines.splice(0, lines.length - maxLines);
+        paint("");
+      }
+      seed();
 
       wait(startDelay, typeCmd);
     }
