@@ -1454,7 +1454,7 @@
       if (!canvas || window.innerWidth < 760) return;
       const ctx = canvas.getContext('2d');
       const CHARS = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモ0123456789ABCDEF'.split('');
-      let cols, drops, fontSize = 13;
+      let cols, drops, fontSize = 14, tick = 0;
 
       function resize() {
         canvas.width  = window.innerWidth;
@@ -1466,15 +1466,18 @@
       window.addEventListener('resize', resize, {passive: true});
 
       function drawMatrix() {
-        ctx.fillStyle = 'rgba(2, 6, 13, 0.12)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < cols; i++) {
-          const ch = CHARS[Math.random() * CHARS.length | 0];
-          ctx.fillStyle = `rgba(55,212,255,${0.07 + Math.random() * 0.07})`;
+        tick++;
+        if (tick % 9 === 0) {
+          ctx.fillStyle = 'rgba(2, 6, 13, 0.10)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.font = `${fontSize}px "Share Tech Mono", monospace`;
-          ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
-          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-          drops[i]++;
+          for (let i = 0; i < cols; i++) {
+            const ch = CHARS[Math.random() * CHARS.length | 0];
+            ctx.fillStyle = `rgba(55,212,255,${0.05 + Math.random() * 0.06})`;
+            ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+          }
         }
         requestAnimationFrame(drawMatrix);
       }
