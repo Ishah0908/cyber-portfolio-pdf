@@ -10,15 +10,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <style>
     /* ═══ MATRIX + NETWORK CANVAS ═══════════════════════════════════════════ */
-    #matrixCanvas, #networkCanvas {
+    #matrixCanvas {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: -2;
+      z-index: -1;
     }
-    #networkCanvas { z-index: -1; }
 
     /* ═══ GLITCH TITLE ══════════════════════════════════════════════════════ */
     h1 { position: relative; }
@@ -146,7 +145,8 @@
       animation: caretBlink 0.8s steps(1) infinite;
       color: var(--cyan);
     }
-  </style>
+
+    /* ═══ MAIN SITE STYLES ══════════════════════════════════════════════════ */
     :root {
       --bg: #02060d;
       --cyan: #37d4ff;
@@ -1086,8 +1086,6 @@
 
   <!-- Matrix rain canvas (deepest layer) -->
   <canvas id="matrixCanvas" aria-hidden="true"></canvas>
-  <!-- Network topology canvas -->
-  <canvas id="networkCanvas" aria-hidden="true"></canvas>
 
   <!-- CRT scanlines -->
   <div class="crt-overlay" aria-hidden="true"></div>
@@ -1381,17 +1379,13 @@
       window.addEventListener('resize', resize, {passive: true});
 
       function drawMatrix() {
-        ctx.fillStyle = 'rgba(2, 6, 13, 0.07)';
+        ctx.fillStyle = 'rgba(2, 6, 13, 0.12)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         for (let i = 0; i < cols; i++) {
           const ch = CHARS[Math.random() * CHARS.length | 0];
-          // leading character (bright)
-          ctx.fillStyle = `rgba(214,251,255,${0.7 + Math.random() * 0.3})`;
+          ctx.fillStyle = `rgba(55,212,255,${0.07 + Math.random() * 0.07})`;
           ctx.font = `${fontSize}px "Share Tech Mono", monospace`;
           ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
-          // trail
-          ctx.fillStyle = `rgba(55,212,255,${0.08 + Math.random() * 0.08})`;
-          ctx.fillText(CHARS[Math.random() * CHARS.length | 0], i * fontSize, (drops[i] - 1) * fontSize);
           if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
           drops[i]++;
         }
@@ -1400,108 +1394,6 @@
       drawMatrix();
     })();
 
-    /* ════════════════════════════════════════════════════════════════════════
-       NETWORK TOPOLOGY CANVAS
-    ════════════════════════════════════════════════════════════════════════ */
-    (function initNetwork() {
-      const canvas = document.getElementById('networkCanvas');
-      if (!canvas || window.innerWidth < 760) return;
-      const ctx = canvas.getContext('2d');
-      const NODE_COUNT = 28;
-      const MAX_DIST = 200;
-      let nodes = [], W, H;
-
-      function resize() {
-        W = canvas.width  = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
-      resize();
-      window.addEventListener('resize', () => { resize(); buildNodes(); }, {passive: true});
-
-      function buildNodes() {
-        nodes = Array.from({length: NODE_COUNT}, (_, i) => ({
-          x: Math.random() * W,
-          y: Math.random() * H,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          r:  2 + Math.random() * 3,
-          pulse: Math.random() * Math.PI * 2,
-          threat: Math.random() < 0.12,   // ~12% are threat nodes (red)
-        }));
-      }
-      buildNodes();
-
-      // Packet travelling along an edge
-      const packets = [];
-      function maybeSpawnPacket(a, b) {
-        if (Math.random() > 0.004) return;
-        packets.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, t: 0, speed: 0.008 + Math.random() * 0.012 });
-      }
-
-      function drawNetwork() {
-        ctx.clearRect(0, 0, W, H);
-        // update node positions
-        nodes.forEach(n => {
-          n.x += n.vx; n.y += n.vy;
-          if (n.x < 0 || n.x > W) n.vx *= -1;
-          if (n.y < 0 || n.y > H) n.vy *= -1;
-          n.pulse += 0.03;
-        });
-
-        // draw edges + spawn packets
-        for (let i = 0; i < nodes.length; i++) {
-          for (let j = i + 1; j < nodes.length; j++) {
-            const dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < MAX_DIST) {
-              const alpha = (1 - dist / MAX_DIST) * 0.18;
-              const threatened = nodes[i].threat || nodes[j].threat;
-              ctx.strokeStyle = threatened
-                ? `rgba(255,77,77,${alpha})`
-                : `rgba(55,212,255,${alpha})`;
-              ctx.lineWidth = 0.7;
-              ctx.beginPath();
-              ctx.moveTo(nodes[i].x, nodes[i].y);
-              ctx.lineTo(nodes[j].x, nodes[j].y);
-              ctx.stroke();
-              maybeSpawnPacket(nodes[i], nodes[j]);
-            }
-          }
-        }
-
-        // draw packets
-        for (let p = packets.length - 1; p >= 0; p--) {
-          const pk = packets[p];
-          pk.t += pk.speed;
-          if (pk.t >= 1) { packets.splice(p, 1); continue; }
-          const px = pk.ax + (pk.bx - pk.ax) * pk.t;
-          const py = pk.ay + (pk.by - pk.ay) * pk.t;
-          ctx.fillStyle = 'rgba(214,251,255,0.85)';
-          ctx.beginPath();
-          ctx.arc(px, py, 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // draw nodes
-        nodes.forEach(n => {
-          const glow = 0.55 + Math.sin(n.pulse) * 0.25;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, n.r * (1 + Math.sin(n.pulse) * 0.15), 0, Math.PI * 2);
-          if (n.threat) {
-            ctx.fillStyle = `rgba(255,77,77,${glow})`;
-            ctx.shadowBlur = 10; ctx.shadowColor = '#ff4d4d';
-          } else {
-            ctx.fillStyle = `rgba(55,212,255,${glow})`;
-            ctx.shadowBlur = 8; ctx.shadowColor = '#37d4ff';
-          }
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        });
-
-        requestAnimationFrame(drawNetwork);
-      }
-      drawNetwork();
-    })();
 
     /* ════════════════════════════════════════════════════════════════════════
        PARTICLE CURSOR TRAIL
